@@ -1,0 +1,652 @@
+[
+  {
+    "file": "fmnist_000.png",
+    "class_id": 9,
+    "expected": {
+      "garment_type": "ankle boot",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_001.png",
+    "class_id": 2,
+    "expected": {
+      "garment_type": "pullover",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_002.png",
+    "class_id": 1,
+    "expected": {
+      "garment_type": "trouser",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_003.png",
+    "class_id": 1,
+    "expected": {
+      "garment_type": "trouser",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_004.png",
+    "class_id": 6,
+    "expected": {
+      "garment_type": "shirt",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_005.png",
+    "class_id": 1,
+    "expected": {
+      "garment_type": "trouser",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_006.png",
+    "class_id": 4,
+    "expected": {
+      "garment_type": "coat",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_007.png",
+    "class_id": 6,
+    "expected": {
+      "garment_type": "shirt",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_008.png",
+    "class_id": 5,
+    "expected": {
+      "garment_type": "sandal",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_009.png",
+    "class_id": 7,
+    "expected": {
+      "garment_type": "sneaker",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_010.png",
+    "class_id": 4,
+    "expected": {
+      "garment_type": "coat",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_011.png",
+    "class_id": 5,
+    "expected": {
+      "garment_type": "sandal",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_012.png",
+    "class_id": 7,
+    "expected": {
+      "garment_type": "sneaker",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_013.png",
+    "class_id": 3,
+    "expected": {
+      "garment_type": "dress",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_014.png",
+    "class_id": 4,
+    "expected": {
+      "garment_type": "coat",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_015.png",
+    "class_id": 1,
+    "expected": {
+      "garment_type": "trouser",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_016.png",
+    "class_id": 2,
+    "expected": {
+      "garment_type": "pullover",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_017.png",
+    "class_id": 4,
+    "expected": {
+      "garment_type": "coat",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_018.png",
+    "class_id": 8,
+    "expected": {
+      "garment_type": "bag",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_019.png",
+    "class_id": 0,
+    "expected": {
+      "garment_type": "t-shirt or top",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_020.png",
+    "class_id": 2,
+    "expected": {
+      "garment_type": "pullover",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_021.png",
+    "class_id": 5,
+    "expected": {
+      "garment_type": "sandal",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_022.png",
+    "class_id": 7,
+    "expected": {
+      "garment_type": "sneaker",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_023.png",
+    "class_id": 9,
+    "expected": {
+      "garment_type": "ankle boot",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_024.png",
+    "class_id": 1,
+    "expected": {
+      "garment_type": "trouser",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_025.png",
+    "class_id": 4,
+    "expected": {
+      "garment_type": "coat",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_026.png",
+    "class_id": 6,
+    "expected": {
+      "garment_type": "shirt",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_027.png",
+    "class_id": 0,
+    "expected": {
+      "garment_type": "t-shirt or top",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_028.png",
+    "class_id": 9,
+    "expected": {
+      "garment_type": "ankle boot",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_029.png",
+    "class_id": 3,
+    "expected": {
+      "garment_type": "dress",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_030.png",
+    "class_id": 8,
+    "expected": {
+      "garment_type": "bag",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_031.png",
+    "class_id": 8,
+    "expected": {
+      "garment_type": "bag",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_032.png",
+    "class_id": 3,
+    "expected": {
+      "garment_type": "dress",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_033.png",
+    "class_id": 3,
+    "expected": {
+      "garment_type": "dress",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_034.png",
+    "class_id": 8,
+    "expected": {
+      "garment_type": "bag",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_035.png",
+    "class_id": 0,
+    "expected": {
+      "garment_type": "t-shirt or top",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_036.png",
+    "class_id": 7,
+    "expected": {
+      "garment_type": "sneaker",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_037.png",
+    "class_id": 5,
+    "expected": {
+      "garment_type": "sandal",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_038.png",
+    "class_id": 7,
+    "expected": {
+      "garment_type": "sneaker",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_039.png",
+    "class_id": 9,
+    "expected": {
+      "garment_type": "ankle boot",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_040.png",
+    "class_id": 6,
+    "expected": {
+      "garment_type": "shirt",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_041.png",
+    "class_id": 1,
+    "expected": {
+      "garment_type": "trouser",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_042.png",
+    "class_id": 3,
+    "expected": {
+      "garment_type": "dress",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_043.png",
+    "class_id": 7,
+    "expected": {
+      "garment_type": "sneaker",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_044.png",
+    "class_id": 6,
+    "expected": {
+      "garment_type": "shirt",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_045.png",
+    "class_id": 7,
+    "expected": {
+      "garment_type": "sneaker",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_046.png",
+    "class_id": 2,
+    "expected": {
+      "garment_type": "pullover",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_047.png",
+    "class_id": 1,
+    "expected": {
+      "garment_type": "trouser",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_048.png",
+    "class_id": 2,
+    "expected": {
+      "garment_type": "pullover",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  },
+  {
+    "file": "fmnist_049.png",
+    "class_id": 2,
+    "expected": {
+      "garment_type": "pullover",
+      "style": null,
+      "material": null,
+      "occasion": null,
+      "continent": null,
+      "country": null,
+      "city": null
+    }
+  }
+]
