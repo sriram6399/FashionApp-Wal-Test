@@ -2,9 +2,9 @@
 #   Set OPENROUTER_API_KEY in .env (see .env.example), then:
 #   docker compose up --build
 #
-# First backend start: imports all images under eval/test_images through the vision API into the DB
-# (same as python eval/import_test_set_to_db.py --all-images). Later starts skip rows already
-# present. SKIP_DB_SEED=1 disables. Without an API key, seed is skipped (empty library).
+# First backend start: imports all images under eval/test_images (same as import_test_set_to_db.py
+# --all-images). With an API key: real vision; without: mock classifier. Later starts skip rows
+# already present. SKIP_DB_SEED=1 disables seeding entirely.
 #
 # Or from repo root:
 #   docker compose -f deploy/docker-compose.yml --project-directory deploy up --build
@@ -33,6 +33,20 @@ services:
       MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-20971520}
       SKIP_DB_SEED: ${SKIP_DB_SEED:-0}
       EVAL_IMPORT_DELAY_SEC: ${EVAL_IMPORT_DELAY_SEC:-0.35}
+    # Seed runs before uvicorn; until then nothing listens on :8000. Give OpenRouter time:
+    # ~53 images × (API latency + EVAL_IMPORT_DELAY_SEC) can be many minutes.
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 3600s
     restart: unless-stopped
 
   frontend:
@@ -44,7 +58,8 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

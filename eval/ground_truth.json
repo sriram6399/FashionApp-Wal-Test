@@ -1,9 +1,11 @@
 [
   {
-    "file": "fmnist_000.png",
-    "class_id": 9,
+    "file": "color_000.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:02023 0628 dress-up fun.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/1/19/02023_0628_dress-up_fun.jpg",
     "expected": {
-      "garment_type": "ankle boot",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -13,10 +15,12 @@
     }
   },
   {
-    "file": "fmnist_001.png",
-    "class_id": 2,
+    "file": "color_001.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:02023 0629 dress-up fun.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/0/05/02023_0629_dress-up_fun.jpg",
     "expected": {
-      "garment_type": "pullover",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -26,10 +30,12 @@
     }
   },
   {
-    "file": "fmnist_002.png",
-    "class_id": 1,
+    "file": "color_002.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:02023 0650 dress-up fun.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/c/c2/02023_0650_dress-up_fun.jpg",
     "expected": {
-      "garment_type": "trouser",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -39,10 +45,12 @@
     }
   },
   {
-    "file": "fmnist_003.png",
-    "class_id": 1,
+    "file": "color_003.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:2014-02-02 Jule Waibel Origami.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/b/b9/2014-02-02_Jule_Waibel_Origami.jpg",
     "expected": {
-      "garment_type": "trouser",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -52,10 +60,12 @@
     }
   },
   {
-    "file": "fmnist_004.png",
-    "class_id": 6,
+    "file": "color_004.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:2019-07-20. \u0415\u0439\u0441\u043a\u0438\u0439 \u0438\u0441\u0442\u043e\u0440\u0438\u043a\u043e-\u043a\u0440\u0430\u0435\u0432\u0435\u0434\u0447\u0435\u0441\u043a\u0438\u0439 \u043c\u0443\u0437\u0435\u0439 154.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/2/2c/2019-07-20._%D0%95%D0%B9%D1%81%D0%BA%D0%B8%D0%B9_%D0%B8%D1%81%D1%82%D0%BE%D1%80%D0%B8%D0%BA%D0%BE-%D0%BA%D1%80%D0%B0%D0%B5%D0%B2%D0%B5%D0%B4%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9_%D0%BC%D1%83%D0%B7%D0%B5%D0%B9_154.jpg",
     "expected": {
-      "garment_type": "shirt",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -65,10 +75,12 @@
     }
   },
   {
-    "file": "fmnist_005.png",
-    "class_id": 1,
+    "file": "color_005.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:2022-10-23 Blick in die Heimatstube H\u00f6ver.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/9/99/2022-10-23_Blick_in_die_Heimatstube_H%C3%B6ver.jpg",
     "expected": {
-      "garment_type": "trouser",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -78,10 +90,12 @@
     }
   },
   {
-    "file": "fmnist_006.png",
-    "class_id": 4,
+    "file": "color_006.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:40 denier black semi opaque tights.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/3/36/40_denier_black_semi_opaque_tights.jpg",
     "expected": {
-      "garment_type": "coat",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -91,10 +105,12 @@
     }
   },
   {
-    "file": "fmnist_007.png",
-    "class_id": 6,
+    "file": "color_007.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:ABOUT THE BRAND-02.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/0/0c/ABOUT_THE_BRAND-02.jpg",
     "expected": {
-      "garment_type": "shirt",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -104,10 +120,12 @@
     }
   },
   {
-    "file": "fmnist_008.png",
-    "class_id": 5,
+    "file": "color_008.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:A BEAUTIFUL Ankara dress.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/6/64/A_BEAUTIFUL_Ankara_dress.jpg",
     "expected": {
-      "garment_type": "sandal",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -117,10 +135,12 @@
     }
   },
   {
-    "file": "fmnist_009.png",
-    "class_id": 7,
+    "file": "color_009.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:A Baby Dress Student.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/6/62/A_Baby_Dress_Student.jpg",
     "expected": {
-      "garment_type": "sneaker",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -130,10 +150,12 @@
     }
   },
   {
-    "file": "fmnist_010.png",
-    "class_id": 4,
+    "file": "color_010.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:A Great Day in New York, New York (3605691598).jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/A_Great_Day_in_New_York%2C_New_York_%283605691598%29.jpg",
     "expected": {
-      "garment_type": "coat",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -143,10 +165,12 @@
     }
   },
   {
-    "file": "fmnist_011.png",
-    "class_id": 5,
+    "file": "color_011.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:A Line Wedding Dress.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/d/df/A_Line_Wedding_Dress.jpg",
     "expected": {
-      "garment_type": "sandal",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -156,10 +180,12 @@
     }
   },
   {
-    "file": "fmnist_012.png",
-    "class_id": 7,
+    "file": "color_012.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:A boy in smock.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/e/e0/A_boy_in_smock.jpg",
     "expected": {
-      "garment_type": "sneaker",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -169,10 +195,12 @@
     }
   },
   {
-    "file": "fmnist_013.png",
-    "class_id": 3,
+    "file": "color_013.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:A display of African dresses.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/3/31/A_display_of_African_dresses.jpg",
     "expected": {
-      "garment_type": "dress",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -182,10 +210,12 @@
     }
   },
   {
-    "file": "fmnist_014.png",
-    "class_id": 4,
+    "file": "color_014.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Abaaaaayaaaaaaa.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/1/14/Abaaaaayaaaaaaa.jpg",
     "expected": {
-      "garment_type": "coat",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -195,10 +225,12 @@
     }
   },
   {
-    "file": "fmnist_015.png",
-    "class_id": 1,
+    "file": "color_015.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Adure Knit Dress 01 (1) (1).jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Adure_Knit_Dress_01_%281%29_%281%29.jpg",
     "expected": {
-      "garment_type": "trouser",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -208,10 +240,12 @@
     }
   },
   {
-    "file": "fmnist_016.png",
-    "class_id": 2,
+    "file": "color_016.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Anja Bavaria - 2025171 152629 2025-06-20 Alpen Flair - Sven - 1D X MK II - 0033 - B70I9015.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/0/07/Anja_Bavaria_-_2025171_152629_2025-06-20_Alpen_Flair_-_Sven_-_1D_X_MK_II_-_0033_-_B70I9015.jpg",
     "expected": {
-      "garment_type": "pullover",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -221,10 +255,12 @@
     }
   },
   {
-    "file": "fmnist_017.png",
-    "class_id": 4,
+    "file": "color_017.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Anokhi Fashion.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Anokhi_Fashion.jpg",
     "expected": {
-      "garment_type": "coat",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -234,10 +270,12 @@
     }
   },
   {
-    "file": "fmnist_018.png",
-    "class_id": 8,
+    "file": "color_018.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Anokhi Vintage.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/7/73/Anokhi_Vintage.jpg",
     "expected": {
-      "garment_type": "bag",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -247,10 +285,12 @@
     }
   },
   {
-    "file": "fmnist_019.png",
-    "class_id": 0,
+    "file": "color_019.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:At Bath Postal Museum 2023 01.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/b/b8/At_Bath_Postal_Museum_2023_01.jpg",
     "expected": {
-      "garment_type": "t-shirt or top",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -260,10 +300,12 @@
     }
   },
   {
-    "file": "fmnist_020.png",
-    "class_id": 2,
+    "file": "color_020.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Azama Female Gown.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/f/f0/Azama_Female_Gown.jpg",
     "expected": {
-      "garment_type": "pullover",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -273,10 +315,12 @@
     }
   },
   {
-    "file": "fmnist_021.png",
-    "class_id": 5,
+    "file": "color_021.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Azama Female Gowns Students.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Azama_Female_Gowns_Students.jpg",
     "expected": {
-      "garment_type": "sandal",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -286,10 +330,12 @@
     }
   },
   {
-    "file": "fmnist_022.png",
-    "class_id": 7,
+    "file": "color_022.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Azama Students Making Presentaion.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Azama_Students_Making_Presentaion.jpg",
     "expected": {
-      "garment_type": "sneaker",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -299,10 +345,12 @@
     }
   },
   {
-    "file": "fmnist_023.png",
-    "class_id": 9,
+    "file": "color_023.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:BAUH6207.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/9/96/BAUH6207.jpg",
     "expected": {
-      "garment_type": "ankle boot",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -312,10 +360,12 @@
     }
   },
   {
-    "file": "fmnist_024.png",
-    "class_id": 1,
+    "file": "color_024.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:BENGAL MUNDARI SAREE TRADITIONAL DRESS.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/3/3c/BENGAL_MUNDARI_SAREE_TRADITIONAL_DRESS.jpg",
     "expected": {
-      "garment_type": "trouser",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -325,10 +375,12 @@
     }
   },
   {
-    "file": "fmnist_025.png",
-    "class_id": 4,
+    "file": "color_025.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:BENGAL MUNDARI TRADITIONAL DRESS.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/2/2a/BENGAL_MUNDARI_TRADITIONAL_DRESS.jpg",
     "expected": {
-      "garment_type": "coat",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -338,10 +390,12 @@
     }
   },
   {
-    "file": "fmnist_026.png",
-    "class_id": 6,
+    "file": "color_026.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:BENGAL MUNDARI TRADITIONAL DRESS 1.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/0/08/BENGAL_MUNDARI_TRADITIONAL_DRESS_1.jpg",
     "expected": {
-      "garment_type": "shirt",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -351,10 +405,12 @@
     }
   },
   {
-    "file": "fmnist_027.png",
-    "class_id": 0,
+    "file": "color_027.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:BENGAL MUNDARI TRADITIONAL DRESS 2.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/1/1a/BENGAL_MUNDARI_TRADITIONAL_DRESS_2.jpg",
     "expected": {
-      "garment_type": "t-shirt or top",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -364,10 +420,12 @@
     }
   },
   {
-    "file": "fmnist_028.png",
-    "class_id": 9,
+    "file": "color_028.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:BENGAL MUNDARI TRADITIONAL DRESS 3.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/5/51/BENGAL_MUNDARI_TRADITIONAL_DRESS_3.jpg",
     "expected": {
-      "garment_type": "ankle boot",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -377,10 +435,12 @@
     }
   },
   {
-    "file": "fmnist_029.png",
-    "class_id": 3,
+    "file": "color_029.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Baby Dress.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/8/80/Baby_Dress.jpg",
     "expected": {
-      "garment_type": "dress",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -390,10 +450,12 @@
     }
   },
   {
-    "file": "fmnist_030.png",
-    "class_id": 8,
+    "file": "color_030.png",
+    "source": "wikimedia_commons",
+    "source_title": "File:Back of feedsack dress.png",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Back_of_feedsack_dress.png",
     "expected": {
-      "garment_type": "bag",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -403,10 +465,12 @@
     }
   },
   {
-    "file": "fmnist_031.png",
-    "class_id": 8,
+    "file": "color_031.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Banjara Women Traditional dress.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Banjara_Women_Traditional_dress.jpg",
     "expected": {
-      "garment_type": "bag",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -416,10 +480,12 @@
     }
   },
   {
-    "file": "fmnist_032.png",
-    "class_id": 3,
+    "file": "color_032.png",
+    "source": "wikimedia_commons",
+    "source_title": "File:Bengal mundari saree photos.png",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Bengal_mundari_saree_photos.png",
     "expected": {
-      "garment_type": "dress",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -429,10 +495,12 @@
     }
   },
   {
-    "file": "fmnist_033.png",
-    "class_id": 3,
+    "file": "color_033.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Bes\u00e6ttelsesmuseet - Befrielseskjole.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/5/59/Bes%C3%A6ttelsesmuseet_-_Befrielseskjole.jpg",
     "expected": {
-      "garment_type": "dress",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -442,10 +510,12 @@
     }
   },
   {
-    "file": "fmnist_034.png",
-    "class_id": 8,
+    "file": "color_034.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Birthday Dress.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Birthday_Dress.jpg",
     "expected": {
-      "garment_type": "bag",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -455,10 +525,12 @@
     }
   },
   {
-    "file": "fmnist_035.png",
-    "class_id": 0,
+    "file": "color_035.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Black Floral Long Dress with comfortable hat in the fashion shop at Tuen Mun.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Black_Floral_Long_Dress_with_comfortable_hat_in_the_fashion_shop_at_Tuen_Mun.jpg",
     "expected": {
-      "garment_type": "t-shirt or top",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -468,10 +540,12 @@
     }
   },
   {
-    "file": "fmnist_036.png",
-    "class_id": 7,
+    "file": "color_036.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Blue and Green Evening Dresses with Lace and Beading.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Blue_and_Green_Evening_Dresses_with_Lace_and_Beading.jpg",
     "expected": {
-      "garment_type": "sneaker",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -481,10 +555,12 @@
     }
   },
   {
-    "file": "fmnist_037.png",
-    "class_id": 5,
+    "file": "color_037.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Bustier, 1976.48.48.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Bustier%2C_1976.48.48.jpg",
     "expected": {
-      "garment_type": "sandal",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -494,10 +570,12 @@
     }
   },
   {
-    "file": "fmnist_038.png",
-    "class_id": 7,
+    "file": "color_038.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:B\u00e9guin, 1988.2.29C(2).jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/d/d9/B%C3%A9guin%2C_1988.2.29C%282%29.jpg",
     "expected": {
-      "garment_type": "sneaker",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -507,10 +585,12 @@
     }
   },
   {
-    "file": "fmnist_039.png",
-    "class_id": 9,
+    "file": "color_039.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:B\u00e9guin, 1988.2.29C(3).jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/2/27/B%C3%A9guin%2C_1988.2.29C%283%29.jpg",
     "expected": {
-      "garment_type": "ankle boot",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -520,10 +600,12 @@
     }
   },
   {
-    "file": "fmnist_040.png",
-    "class_id": 6,
+    "file": "color_040.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:B\u00e9guin, 1988.2.29C.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/d/dd/B%C3%A9guin%2C_1988.2.29C.jpg",
     "expected": {
-      "garment_type": "shirt",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -533,10 +615,12 @@
     }
   },
   {
-    "file": "fmnist_041.png",
-    "class_id": 1,
+    "file": "color_041.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:B\u00e9guin, 1998.86.1B.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/9/9b/B%C3%A9guin%2C_1998.86.1B.jpg",
     "expected": {
-      "garment_type": "trouser",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -546,10 +630,12 @@
     }
   },
   {
-    "file": "fmnist_042.png",
-    "class_id": 3,
+    "file": "color_042.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:B\u00e9raud - Jeune femme traversant le boulevard, Offenstadt 39.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/c/cf/B%C3%A9raud_-_Jeune_femme_traversant_le_boulevard%2C_Offenstadt_39.jpg",
     "expected": {
-      "garment_type": "dress",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -559,10 +645,12 @@
     }
   },
   {
-    "file": "fmnist_043.png",
-    "class_id": 7,
+    "file": "color_043.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Cache-poussi\u00e8re, 1965.78.1(2).jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/8/8c/Cache-poussi%C3%A8re%2C_1965.78.1%282%29.jpg",
     "expected": {
-      "garment_type": "sneaker",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -572,10 +660,12 @@
     }
   },
   {
-    "file": "fmnist_044.png",
-    "class_id": 6,
+    "file": "color_044.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Cache-poussi\u00e8re, 1965.78.1.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Cache-poussi%C3%A8re%2C_1965.78.1.jpg",
     "expected": {
-      "garment_type": "shirt",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -585,10 +675,12 @@
     }
   },
   {
-    "file": "fmnist_045.png",
-    "class_id": 7,
+    "file": "color_045.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Canezou, 1955.4.4(2).jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Canezou%2C_1955.4.4%282%29.jpg",
     "expected": {
-      "garment_type": "sneaker",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -598,10 +690,12 @@
     }
   },
   {
-    "file": "fmnist_046.png",
-    "class_id": 2,
+    "file": "color_046.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Canezou, 1955.4.4.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Canezou%2C_1955.4.4.jpg",
     "expected": {
-      "garment_type": "pullover",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -611,10 +705,12 @@
     }
   },
   {
-    "file": "fmnist_047.png",
-    "class_id": 1,
+    "file": "color_047.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Carmen Dell'Orifice, David Jones' American Fashion Parade, Sydney, 1950 - photographer Geoffrey Lee (7785597746).jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/8/83/Carmen_Dell%27Orifice%2C_David_Jones%27_American_Fashion_Parade%2C_Sydney%2C_1950_-_photographer_Geoffrey_Lee_%287785597746%29.jpg",
     "expected": {
-      "garment_type": "trouser",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -624,10 +720,12 @@
     }
   },
   {
-    "file": "fmnist_048.png",
-    "class_id": 2,
+    "file": "color_048.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Castelbajac-Chasuble-1982-Expo ann\u00e9es 80.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Castelbajac-Chasuble-1982-Expo_ann%C3%A9es_80.jpg",
     "expected": {
-      "garment_type": "pullover",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,
@@ -637,10 +735,12 @@
     }
   },
   {
-    "file": "fmnist_049.png",
-    "class_id": 2,
+    "file": "color_049.jpg",
+    "source": "wikimedia_commons",
+    "source_title": "File:Collection of gowns worn by Imelda Romualdez-Marcos.jpg",
+    "source_url": "https://upload.wikimedia.org/wikipedia/commons/d/d6/Collection_of_gowns_worn_by_Imelda_Romualdez-Marcos.jpg",
     "expected": {
-      "garment_type": "pullover",
+      "garment_type": null,
       "style": null,
       "material": null,
       "occasion": null,

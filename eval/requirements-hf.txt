@@ -1,0 +1,2 @@
+# Optional: Hugging Face eval image prep (python eval/prepare_hf_fashion_sample.py)
+datasets>=3.0.0

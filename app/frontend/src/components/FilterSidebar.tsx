@@ -24,13 +24,11 @@ const LABELS: Record<string, string> = {
 type Props = {
   filters: FilterOptions | null;
   values: Record<string, string>;
-  search: string;
-  onSearch: (v: string) => void;
   onChange: (key: string, value: string) => void;
   onClear: () => void;
 };
 
-export function FilterSidebar({ filters, values, search, onSearch, onChange, onClear }: Props) {
+export function FilterSidebar({ filters, values, onChange, onClear }: Props) {
   if (!filters) {
     return (
       <aside style={asideStyle}>
@@ -43,25 +41,12 @@ export function FilterSidebar({ filters, values, search, onSearch, onChange, onC
 
   return (
     <aside style={asideStyle}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 }}>
-        <h2 style={{ margin: 0, fontSize: "1.25rem" }}>Refine</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: "1rem" }}>
+        <h2 style={{ margin: 0, fontSize: "1.25rem", color: "var(--text)" }}>Filters</h2>
         <button type="button" onClick={onClear} style={ghostBtn}>
-          Clear
+          Clear all
         </button>
       </div>
-      <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginTop: 4 }}>
-        Options are built from your library. Combine with search.
-      </p>
-
-      <label style={labelStyle}>
-        Search
-        <input
-          value={search}
-          onChange={(e) => onSearch(e.target.value)}
-          placeholder='e.g. "embroidered neckline", "artisan market"'
-          style={inputStyle}
-        />
-      </label>
 
       {keys.map((key) => {
         const opts = filters[key];

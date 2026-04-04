@@ -1,60 +1,205 @@
-# Fashion Garment Classification & Inspiration Library
+# Fashion Inspiration Library
 
-Lightweight full-stack app for fashion teams to **upload inspiration photos**, get **AI-generated descriptions and structured garment metadata**, **search and filter** (including location and time context), and add **designer-only annotations** that stay visually and logically separate from AI output.
+Full-stack app to upload fashion inspiration images, run vision-based AI tagging, search and filter the library, and add designer annotations. This README focuses on **running everything locally with Docker** first, then documents **tests**, **model evaluation**, and how those map to a typical submission rubric.
+
+## Table of contents
+
+| Section | Links |
+|---------|-------|
+| **Overview** | [Architecture](#architecture) · [Tech stack](#tech-stack) ([Frontend](#frontend) · [Backend](#backend)) · [Supported functionality](#supported-functionality) |
+| **Run & develop** | [Run locally with Docker](#run-locally-with-docker) · [Local development without Docker](#local-development-without-docker) |
+| **Repo & rubric** | [Repository layout](#repository-layout) · [Submission deliverables (rubric mapping)](#submission-deliverables-rubric-mapping) |
+| **Quality** | [Model evaluation](#model-evaluation) · [Tests](#tests) |
+| **Reference** | [API overview](#api-overview) · [License and data](#license-and-data) |
+
+---
+
+## Architecture
+
+The app is a **classic three-tier setup** for local and container use: a **single-page web UI** talks to a **REST API**, which persists **metadata in SQLite** and **image bytes on disk** (or in a Docker volume). Upload and import paths send image bytes through a **vision LLM** (or a **mock** classifier when no API key is configured); the model returns JSON that is **parsed into structured garment and context fields** used for search, filters, and facets. **Evaluation scripts** under `eval/` call the same classification pipeline as the API so reported metrics match production behavior.
+
+---
+
+## Tech stack
+
+### Frontend
+
+| Layer | Technology |
+|--------|------------|
+| UI library | [React](https://react.dev/) 18 |
+| Language | TypeScript |
+| Build / dev server | [Vite](https://vitejs.dev/) |
+| Production hosting | Static build served by [nginx](https://nginx.org/) (Alpine image in Docker); `/api` reverse-proxied to the backend |
+
+### Backend
+
+| Layer | Technology |
+|--------|------------|
+| API framework | [FastAPI](https://fastapi.tiangolo.com/) (ASGI) |
+| Server | [Uvicorn](https://www.uvicorn.org/) |
+| ORM / DB | [SQLAlchemy](https://www.sqlalchemy.org/) 2.x async with **SQLite** via `aiosqlite` |
+| Storage | Local filesystem paths (`UPLOAD_DIR`, `DATA_DIR`); Docker Compose uses a named volume mounted at `/data` |
+| Vision / LLM | OpenAI-compatible client ([OpenRouter](https://openrouter.ai/) or OpenAI) for multimodal chat + JSON; deterministic **mock** when no key is set |
+| Config | Pydantic settings + `deploy/.env` |
+
+### Deployment (local)
+
+[Docker Compose](https://docs.docker.com/compose/) (`deploy/docker-compose.yml`) builds backend and frontend images from the **repository root**, runs both services on a default network, and persists SQLite and uploads in a **named volume**.
+
+---
+
+## Supported functionality
+
+- **Image library** — Browse a grid of inspiration images with thumbnails served from the API.
+- **Upload** — Upload new images; each file is **classified** (LLM or mock) and stored with **structured attributes** (e.g. garment type, style, material, color, pattern, season, occasion, location and time context).
+- **Search & filters** — Query the library with text search (`q`) and filters such as garment type, style, material, occasion, location (continent / country / city), and time facets (year, month, season), plus designer-oriented fields where applicable.
+- **Facets** — `GET /api/filters` exposes values present in the database for building filter UIs.
+- **Designer workflow** — Update **designer tags, notes, and name** on records (`PATCH`).
+- **Health / mode** — `GET /api/health` indicates service health and whether the **real LLM or mock** classifier is active.
+- **Seeded demo data** — Docker backend entrypoint can **import** `eval/test_images/` through the same pipeline as upload (optional; configurable via env).
+- **Evaluation** — Offline **per-attribute accuracy** against `eval/ground_truth.json` via `eval/evaluate.py` (see [Model evaluation](#model-evaluation)).
+- **Automated tests** — Unit, integration, and E2E coverage (see [Tests](#tests)).
+
+---
+
+## Run locally with Docker
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) (Compose V2: `docker compose`)
+
+### 1. Configure environment
+
+`deploy/.env.example` lists every variable you may need, including the LLM key names (`OPENROUTER_API_KEY`, `OPENAI_API_KEY`, and the rest). **Do not commit real API key values** to the repo or into the tracked example file; keep secrets only in gitignored `deploy/.env`. Any empty or sample values in `.env.example` are there for quick local copy-and-test, not as a pattern for sharing production keys.
+
+From the repository root, copy the example file and then edit `deploy/.env` with your own values:
+
+```bash
+cp deploy/.env.example deploy/.env
+```
+
+In `deploy/.env`, set at least one of (optional for a quick demo):
+
+- **`OPENROUTER_API_KEY`** — recommended ([OpenRouter keys](https://openrouter.ai/keys))
+- **`OPENAI_API_KEY`** — optional alternative when OpenRouter is unset
+
+Without a key, the API still runs; Docker **still seeds** the library from `eval/test_images/` using the **mock** classifier (see seeding below). Add a key for real vision tagging on import and uploads.
+
+Other variables are documented inline in `deploy/.env.example` (CORS, models, upload limits, etc.).
+
+### 2. Build and start
+
+**From the repository root** (recommended):
+
+```bash
+docker compose -f deploy/docker-compose.yml --project-directory deploy up --build
+```
+
+**Or** from the `deploy` directory:
+
+```bash
+cd deploy
+docker compose up --build
+```
+
+### 3. Open the app
+
+| What | URL |
+|------|-----|
+| **Web UI** (nginx + static frontend) | [http://localhost:8080](http://localhost:8080) |
+| **Backend API** (direct) | [http://localhost:8000](http://localhost:8000) |
+
+The frontend proxies API calls to the backend at **`/api`** (same origin on port 8080). The backend is also exposed on port **8000** for direct use or debugging.
+
+### First start: database seeding
+
+On each backend start (unless disabled), the container runs `import_test_set_to_db.py --all-images`: it imports everything under `eval/test_images/` using the same pipeline as `POST /api/images`. **With** an API key that uses real vision; **without** a key it uses the **mock** classifier so you still get a populated grid. **Restarts** skip rows that are already in the database (`eval:<filename>` captions).
+
+- To **disable** seeding entirely: set `SKIP_DB_SEED=1` in `deploy/.env` (or under `backend.environment` in `docker-compose.yml`).
+
+### Data persistence
+
+SQLite, uploads, and app data live in the Docker volume **`fashion_data`** (mounted at `/data` in the backend container). Removing the volume clears the library:
+
+```bash
+docker compose -f deploy/docker-compose.yml --project-directory deploy down -v
+```
+
+### Stop
+
+```bash
+docker compose -f deploy/docker-compose.yml --project-directory deploy down
+```
+
+---
 
 ## Repository layout
 
+Layout matches a common **submission spec**: application under `app/`, evaluation assets under `eval/`, top-level API tests under `tests/`, plus co-located backend unit tests.
+
 | Path | Purpose |
 |------|---------|
-| `app/backend` | Python **FastAPI** API, SQLite + SQLAlchemy (async), image storage, classifier, JSON parser |
-| `app/frontend` | **React** + **TypeScript** + **Vite** UI (grid, dynamic filters, upload, detail drawer) |
-| `eval` | **Eval test set** (e.g. Wikimedia color photos via `prepare_color_test_set.py`), `evaluate.py`, `import_test_set_to_db.py` |
-| `app/backend/tests` | **unittest** coverage for each backend module |
-| `tests` | Integration (location/time filters) and E2E (upload → classify → filter) |
-| `deploy` | **Docker** compose, Dockerfiles, **`deploy/.env.example`** (copy to `deploy/.env`) |
+| `app/backend` | FastAPI API, SQLite, image storage, LLM classification, parser, `fashion_backend` package |
+| `app/frontend` | React + TypeScript + Vite UI |
+| `app/backend/tests` | Backend unit tests (e.g. model output parsing, classifier config) |
+| `eval` | Labeled test set (`ground_truth.json`), `test_images/`, `evaluate.py`, import helpers, `evaluation_report.md` |
+| `tests` | Integration tests (filters) and end-to-end tests (HTTP API) |
+| `deploy` | `docker-compose.yml`, Dockerfiles, `nginx` config, `.env.example` |
 
-## Architecture (v1)
+---
 
-- **Backend**: `fashion_backend/` package — `main.py` (routes), `schemas.py` (Pydantic models), `parser.py` (model JSON → structured fields), `classifier.py` (**OpenRouter** or **OpenAI** vision via the OpenAI-compatible client, else deterministic mock), `services/images.py` (persistence + filter/search), `db.py` + `models.py` (SQLite).
-- **Metadata**: AI fields live in `ImageRecord.ai_metadata` as JSON (garment type, style, material, colors, pattern, season, occasion, consumer profile, trend notes, nested `location_context` / `time_context`). Designer fields: `designer_tags`, `designer_notes`, `designer_name`.
-- **Filters**: `GET /api/filters` aggregates **distinct values from the database** (no hardcoded facet lists). `GET /api/images` accepts query params for each facet plus `q` for **token-wise** full-text style search across description, AI JSON, designer tags, and notes.
-- **Frontend**: Vite reads **`deploy/.env`** (`VITE_*` keys). Dev server **proxies** `/api` (default target `http://127.0.0.1:8000`). Production: empty **`VITE_API_BASE_URL`** = same-origin `/api` (e.g. nginx in `deploy/`).
+## Submission deliverables (rubric mapping)
 
-## Setup
+| Expectation | Where it lives in this repo |
+|-------------|----------------------------|
+| **Web app**, minimal local setup, README with setup + architecture | Docker and dev instructions above; **Architecture** section; API summary below |
+| **Model evaluation** — 50–100 fashion/garment images, manual expected attributes, classifier run, **per-attribute accuracy** (garment type, style, material, occasion, **location**), short analysis | `eval/test_images/` (populate with `eval/prepare_color_test_set.py` or your own images), labels in `eval/ground_truth.json` (~50 entries in-repo), run `eval/evaluate.py` → console + `eval/evaluation_report.md`. Location is scored as `continent` / `country` / `city`. **Time** context is modeled in metadata and filters but not in the accuracy table unless you extend `evaluate.py`. |
+| **Unit test** — parsing model output into structured attributes | `app/backend/tests/parser_tests.py` (`parse_model_output`, `normalize_raw_payload`) |
+| **Integration test** — filter behavior, **especially location and time** | `tests/test_filters_integration.py` (`country`+`year`, `continent`+`month`, `time_season` + `city` via service layer) |
+| **End-to-end test** — upload, classify, filter | `tests/test_e2e_upload_classify_filter.py` (`POST /api/images`, then `GET /api/images` by `garment_type`, then `GET /api/filters`) |
+| **`/app`**, **`/eval`**, **`/tests`**, **README** | `app/`, `eval/`, `tests/`, this file |
 
-### 1. Python (backend + tests + eval)
+For review, prefer **logical git commits** (e.g. backend, frontend, eval set, tests, docs) so the story of the work is easy to follow.
+
+---
+
+## Model evaluation
+
+**Test set:** The repo is set up for **at least 50** labeled rows in `eval/ground_truth.json`, with files under `eval/test_images/` (e.g. Wikimedia Commons–sourced fashion photos; you can also use other open datasets or sources such as [Pexels fashion search](https://www.pexels.com/search/fashion/) if licenses allow). If `test_images` is empty, run from the **repository root**:
 
 ```bash
-cd Fashion-APP
+pip install -r app/backend/requirements.txt
+python eval/prepare_color_test_set.py
+```
+
+That script downloads on the order of **50** images and writes/merges `ground_truth.json` (expected fields may be null until you fill them manually for strict accuracy). Optional: `eval/prepare_hf_fashion_sample.py` + `eval/requirements-hf.txt` for additional sampling.
+
+**Run the evaluator** (uses `OPENROUTER_API_KEY` or `OPENAI_API_KEY` from the environment, or **mock** if unset — mock scores are not semantically meaningful):
+
+```bash
+# Load secrets the same way as local dev, e.g. from deploy/.env (do not commit keys)
+python eval/evaluate.py
+```
+
+This classifies each image with the same pipeline as the API, compares to `expected` in `ground_truth.json`, prints **per-attribute accuracy** for `garment_type`, `style`, `material`, `occasion`, and location fields, and overwrites `eval/evaluation_report.md` with the numeric summary plus a short template **Analysis** section. For a real submission, edit that analysis (or this README) with honest notes on **where the model does well**, **where it struggles**, and **what you would improve** (prompting, taxonomy, fine-tuning, more labeled data, etc.).
+
+---
+
+## Local development without Docker
+
+Use the same `deploy/.env` file.
+
+**Backend** — from the **repository root**, create a venv, install dependencies, then run the app from `app/backend`:
+
+```bash
 python -m venv .venv
 # Windows: .venv\Scripts\activate
-# macOS/Linux: source .venv/bin/activate
 pip install -r app/backend/requirements.txt -r app/backend/requirements-dev.txt
-```
-
-Run API from `app/backend` (so `data/` and `uploads/` resolve correctly):
-
-```bash
 cd app/backend
 python run.py
-# or: uvicorn fashion_backend.main:app --reload --port 8000
 ```
 
-Configuration lives in **`deploy/.env`** (copy from **`deploy/.env.example`**). The backend loads that file by path (you can still override with process env vars):
-
-- **`OPENROUTER_API_KEY`** — recommended: routes inference through [OpenRouter](https://openrouter.ai/) (`https://openrouter.ai/api/v1`). If this is set, **`OPENAI_API_KEY` is ignored** for classification.
-- **`OPENAI_API_KEY`** — direct OpenAI API (default base `https://api.openai.com/v1`) when `OPENROUTER_API_KEY` is unset.
-- **`VISION_MODEL`** (or legacy `OPENAI_MODEL`) — model id. If unset: **OpenRouter** defaults to **`google/gemini-2.0-flash-001`** (fast multimodal, quality close to much larger models on many tasks); **OpenAI** defaults to **`gpt-4o-mini`**. Override anytime, e.g. `openai/gpt-4o-mini` on OpenRouter for parity with the old default.
-- **`LLM_BASE_URL`** — optional; override the API base (e.g. another OpenAI-compatible proxy). If unset and `OPENROUTER_API_KEY` is set, the base is OpenRouter.
-- **`OPENROUTER_SITE_URL`**, **`OPENROUTER_APP_NAME`** — optional headers OpenRouter uses for rankings (`HTTP-Referer`, `X-Title`).
-- **`DATABASE_URL`** — override SQLite URL (tests set this automatically).
-- **`CORS_ORIGINS`** — comma-separated origins (default includes Vite `5173`).
-
-**Faster models on OpenRouter (similar accuracy for fashion tagging):** **`google/gemini-2.0-flash-001`** is the default when using OpenRouter without `VISION_MODEL` — strong vision and typically **lower latency than `gpt-4o-mini`**, with quality often close to much larger models on multimodal tasks (per OpenRouter’s model notes). Alternatives: **`openai/gpt-4o-mini`** (very reliable JSON; can be slower than Flash), **`meta-llama/llama-3.2-11b-vision-instruct`** (lighter/cheaper; may drop nuance). OpenRouter’s catalog changes over time — confirm the slug on [openrouter.ai/models](https://openrouter.ai/models) and rotate if a model is deprecated.
-
-If no API key is set, a **mock** classifier cycles deterministic labels for local UX/tests.
-
-### 2. Node (frontend)
+**Frontend**:
 
 ```bash
 cd app/frontend
@@ -62,63 +207,51 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`. Ensure the API is on port `8000`.
+Open [http://localhost:5173](http://localhost:5173); the dev server proxies `/api` to the backend (see `VITE_DEV_PROXY_TARGET` in `.env.example`).
 
-### 3. Evaluation test set (~50 images)
+---
 
-**Color photos (recommended):** downloads real **RGB** clothing images from [Wikimedia Commons](https://commons.wikimedia.org/) categories (dresses, jeans, outerwear, etc.) via the public API — no key required. Downloads are throttled to stay within rate limits; if you see HTTP 429, wait a few minutes and run again (or increase `DOWNLOAD_DELAY_SEC` in the script). `ground_truth.json` starts with `expected` fields set to `null`; fill in labels if you want automated accuracy scores.
+## Tests
+
+**Install** (from repository root):
 
 ```bash
-# repo root
-python eval/prepare_color_test_set.py
+pip install -r app/backend/requirements.txt -r app/backend/requirements-dev.txt
 ```
 
-**Load into the app DB** (one OpenRouter/OpenAI vision call per image when `OPENROUTER_API_KEY` is set in `deploy/.env`):
+**Full suite** — `pytest.ini` collects `tests/` and `app/backend/tests/` and enforces high coverage on `fashion_backend`:
 
 ```bash
-python eval/import_test_set_to_db.py                  # files listed in ground_truth.json
-python eval/import_test_set_to_db.py --all-images    # every image in eval/test_images/
-```
-
-Run metrics (uses the same classifier as the app — mock without API keys, otherwise OpenRouter or OpenAI):
-
-```bash
-python eval/evaluate.py
-```
-
-### 4. Tests
-
-```bash
-# repo root (backend unit tests + integration/E2E)
 pytest
 ```
 
-## Model Evaluation Summary
+**Rubric-focused subset** (faster feedback; bypasses the global coverage threshold from `addopts`):
 
-As outlined within the requirements, automated testing ran successfully against 50 dataset images curated from Wikimedia Commons utilizing `openai/gpt-4o`. Detailed per-attribute statistics are captured via `evaluate.py`.
+```bash
+pytest app/backend/tests/parser_tests.py tests/test_filters_integration.py tests/test_e2e_upload_classify_filter.py --no-cov
+```
 
-| Attribute | Output Level | Reasoning & Model Efficacy |
-|-----------|-----------------|--------|
-| `garment_type` | **Highly Accurate** | With precise few-shot prompting, GPT-4o cleanly categorizes top-level structural garments. |
-| `material`, `colors` | **Accurate**  | Material taxonomy correctly maps generic textures despite varying lighting conditions. |
-| `style` | **Average** | Accurate abstractly, however mapping complex contextual strings ("bohemian", "casual") strictly necessitates fuzzy matching (which lowers rigid equality benchmarks but functionally solves the semantic query). |
-| Location / time | **N/A** | Images curated randomly off Wikimedia Commons lack geo-metadata or visible geo-landmarks to infer accurate locations unless explicit text exists in the upload context. |
+| Rubric item | Test file | What it asserts |
+|-------------|-----------|-----------------|
+| Parse LLM JSON into structured attributes | `app/backend/tests/parser_tests.py` | Fenced JSON, nested/flat shapes, `location_context` / `time_context` coercion, list fields |
+| Location + time **filters** on stored metadata | `tests/test_filters_integration.py` | HTTP `GET /api/images` with `country`, `year`, `continent`, `month`; service-layer `time_season` + `city` |
+| Upload → classify → filter (E2E) | `tests/test_e2e_upload_classify_filter.py` | `POST /api/images` returns `structured.garment_type`; listing by that type includes the new row; `GET /api/filters` returns facets |
 
-**Observed behavior (GPT-4o)**: With the integration of Pillow image rescaling (max `2048px`), upload-to-classification executes faster on OpenRouter with zero 500 payload errors due to optimized Base64 byte counts.
+Other backend modules (DB, schemas, classifier, embeddings, etc.) have additional tests under `app/backend/tests/`.
 
-**Improvements with more time**: Semantic searches against subjective definitions (like "style") were effectively solved using Vector DB embeddings so that `streetwear` matched `urban casual`. Future directions should include finetuning taxonomy lists in prompt metadata based on the specific design agency definitions.
+---
 
-## API cheat sheet
+## API overview
 
-- `POST /api/images` — multipart upload → classify → store  
-- `GET /api/images` — query filters + `q`  
-- `GET /api/filters` — dynamic facet values  
-- `PATCH /api/images/{id}` — designer tags, notes, name  
+- `POST /api/images` — upload → classify → store  
+- `GET /api/images` — filters and search (`q`)  
+- `GET /api/filters` — facet values from the database  
+- `PATCH /api/images/{id}` — designer fields  
 - `GET /api/files/{filename}` — image bytes  
-- `GET /api/health` — `mock` vs `openai`
+- `GET /api/health` — health / classifier mode  
 
-## License
+---
 
-Eval images prepared via `prepare_color_test_set.py` come from [Wikimedia Commons](https://commons.wikimedia.org/) (check each file’s license on Commons). Application code: use per your team policy.
-#   F a s h i o n A p p - W a l - T e s t  
- 
+## License and data
+
+Eval images under `eval/` may come from [Wikimedia Commons](https://commons.wikimedia.org/); check each file’s license on Commons. Application code: per your team policy.

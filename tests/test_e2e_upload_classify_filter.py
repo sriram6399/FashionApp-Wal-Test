@@ -22,7 +22,8 @@ async def test_upload_then_filter_by_garment_type(client: AsyncClient, tiny_png:
 
     r = await client.get("/api/images", params={"garment_type": gt})
     assert r.status_code == 200
-    rows = r.json()
+    listed = r.json()
+    rows = listed["items"]
     assert len(rows) >= 1
     assert any(x["id"] == body["id"] for x in rows)
 

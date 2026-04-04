@@ -9,5 +9,6 @@ pydantic-settings==2.6.1
 pillow==11.0.0
 httpx==0.28.1
 openai>=1.57.0
+chromadb>=0.5.23
 
 # Dev / tests (install with: pip install -r requirements.txt -r requirements-dev.txt)

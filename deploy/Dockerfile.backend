@@ -18,7 +18,9 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 COPY app/backend/fashion_backend /app/app/backend/fashion_backend
 COPY eval /app/eval
 COPY deploy/docker-backend-entrypoint.sh /app/deploy/docker-backend-entrypoint.sh
-RUN chmod +x /app/deploy/docker-backend-entrypoint.sh \
+# Strip CRLF if checked out on Windows; otherwise exec fails with "no such file or directory"
+RUN sed -i 's/\r$//' /app/deploy/docker-backend-entrypoint.sh \
+    && chmod +x /app/deploy/docker-backend-entrypoint.sh \
     && mkdir -p /data/uploads /data/appdata /app/deploy \
     && touch /app/deploy/.env
 

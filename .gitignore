@@ -3,13 +3,17 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
-.env
+# .env is not ignored (tracked by project choice; use deploy/.env.example as template)
 *.egg-info/
 dist/
 build/
 .pytest_cache/
 .coverage
 htmlcov/
+.mypy_cache/
+.ruff_cache/
+coverage.xml
+*.log
 
 # Node
 node_modules/
@@ -33,3 +37,9 @@ Thumbs.db
 # Eval downloads / cache
 eval/downloads/
 eval/.cache/
+# Large eval fixtures (generate locally; see eval/prepare_* scripts)
+eval/test_images/
+
+# Local scratch / diagnostics (do not commit)
+app/frontend/errors.txt
+app/frontend/ts_errors.txt

@@ -1,37 +1,33 @@
-import { useEffect, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { fileSrc, patchImage } from "../api";
+import { fileSrc } from "../api";
 import type { ImageItem, StructuredMeta } from "../types";
+import { X } from "lucide-react";
 
 type Props = {
   item: ImageItem | null;
   onClose: () => void;
-  onSaved: () => void;
 };
 
 function MetaTable({ title, accent, children }: { title: string; accent: string; children: ReactNode }) {
   return (
-    <section style={{ marginTop: "1.25rem" }}>
+    <section style={{ marginTop: "1rem" }}>
       <h3
         style={{
-          margin: "0 0 0.5rem",
-          fontSize: "0.75rem",
+          margin: "0 0 1.25rem",
+          fontSize: "0.85rem",
           textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          color: accent,
+          letterSpacing: "0.1em",
+          fontWeight: 700,
+          color: "var(--primary)",
+          display: "flex",
+          alignItems: "center",
+          gap: "10px"
         }}
       >
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: accent, display: "inline-block", boxShadow: "0 0 10px " + accent }}></span>
         {title}
       </h3>
-      <div
-        style={{
-          border: "1px solid var(--border)",
-          borderRadius: 10,
-          padding: "0.75rem",
-          background: "var(--surface2)",
-          fontSize: "0.9rem",
-        }}
-      >
+      <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
         {children}
       </div>
     </section>
@@ -44,6 +40,7 @@ function formatStructured(s: StructuredMeta): [string, string][] {
     if (v) rows.push([k, v]);
   };
   add("Garment type", s.garment_type);
+  add("Category", s.category);
   add("Style", s.style);
   add("Material", s.material);
   if (s.color_palette?.length) add("Colors", s.color_palette.join(", "));
@@ -67,96 +64,70 @@ function formatStructured(s: StructuredMeta): [string, string][] {
   return rows;
 }
 
-export function ImageDetail({ item, onClose, onSaved }: Props) {
-  const [tags, setTags] = useState("");
-  const [notes, setNotes] = useState("");
-  const [designer, setDesigner] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (!item) return;
-    setTags(item.designer_tags.join(", "));
-    setNotes(item.designer_notes ?? "");
-    setDesigner(item.designer_name ?? "");
-  }, [item]);
-
+export function ImageDetail({ item, onClose }: Props) {
   if (!item) return null;
 
-  const save = async () => {
-    setSaving(true);
-    try {
-      const tagList = tags
-        .split(/[,;]+/)
-        .map((t) => t.trim())
-        .filter(Boolean);
-      await patchImage(item.id, {
-        designer_tags: tagList,
-        designer_notes: notes,
-        designer_name: designer,
-      });
-      onSaved();
-      onClose();
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
-    <div style={overlay} role="dialog" aria-modal="true">
-      <div style={panel}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 12 }}>
-          <h2 style={{ margin: 0, fontSize: "1.5rem" }}>Inspiration detail</h2>
+    <div style={overlay} role="dialog" aria-modal="true" onClick={onClose}>
+      <div style={panel} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "1rem" }}>
+          <h2 style={{ margin: 0, fontSize: "1.75rem", letterSpacing: "-0.03em" }}>Inspiration Detail</h2>
           <button type="button" onClick={onClose} style={closeBtn} aria-label="Close">
-            ✕
+            <X size={20} />
           </button>
         </div>
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "minmax(200px, 1fr) minmax(280px, 1.1fr)",
-            gap: "1.25rem",
-            marginTop: "1rem",
+            gridTemplateColumns: "1.4fr 1fr",
+            gap: "2.5rem",
           }}
         >
-          <img
-            src={fileSrc(item.file_url)}
-            alt=""
-            style={{ width: "100%", borderRadius: 12, border: "1px solid var(--border)" }}
-          />
-          <div style={{ overflowY: "auto", maxHeight: "70vh" }}>
-            <MetaTable title="AI description & metadata" accent="var(--ai)">
-              <p style={{ margin: "0 0 0.75rem", lineHeight: 1.55 }}>{item.description}</p>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
-                <tbody>
-                  {formatStructured(item.structured).map(([k, v]) => (
-                    <tr key={k}>
-                      <td style={{ color: "var(--muted)", padding: "4px 8px 4px 0", verticalAlign: "top" }}>{k}</td>
-                      <td style={{ padding: "4px 0" }}>{v}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </MetaTable>
-
-            <MetaTable title="Designer annotations" accent="var(--designer)">
-              <p style={{ margin: "0 0 0.5rem", fontSize: "0.8rem", color: "var(--muted)" }}>
-                Tags and notes are yours — searchable and shown separately from AI output.
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-start", background: "var(--surface2)", borderRadius: 16, padding: "0.5rem", boxShadow: "inset 0 2px 10px rgba(0,0,0,0.02)" }}>
+             <img
+               src={fileSrc(item.file_url)}
+               alt=""
+               style={{ 
+                   width: "100%", 
+                   maxHeight: "75vh", 
+                   objectFit: "contain", 
+                   borderRadius: 12, 
+                   boxShadow: "var(--shadow-md)"
+               }}
+             />
+          </div>
+          <div style={{ overflowY: "auto", maxHeight: "75vh", paddingRight: "0.5rem" }}>
+            <MetaTable title="Visual Analysis & Indexing" accent="var(--accent)">
+              <p style={{ 
+                margin: 0, 
+                lineHeight: 1.6, 
+                fontSize: "1.1rem", 
+                color: "var(--primary)", 
+                fontStyle: "italic", 
+                borderLeft: "3px solid var(--accent)", 
+                paddingLeft: "1.25rem",
+                opacity: 0.9
+              }}>
+                 "{item.description}"
               </p>
-              <label style={lbl}>
-                Your name
-                <input value={designer} onChange={(e) => setDesigner(e.target.value)} style={inp} />
-              </label>
-              <label style={lbl}>
-                Tags (comma-separated)
-                <input value={tags} onChange={(e) => setTags(e.target.value)} style={inp} placeholder="market trip, pleating idea…" />
-              </label>
-              <label style={lbl}>
-                Notes
-                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} style={{ ...inp, minHeight: 88, resize: "vertical" }} />
-              </label>
-              <button type="button" onClick={save} disabled={saving} style={primaryBtn}>
-                {saving ? "Saving…" : "Save annotations"}
-              </button>
+              
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.85rem", marginTop: "0.5rem" }}>
+                  {formatStructured(item.structured).map(([k, v]) => (
+                    <div key={k} style={{ 
+                      background: "var(--bg)", 
+                      padding: "0.6rem 1rem", 
+                      borderRadius: 14, 
+                      border: "1px solid var(--border)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                      boxShadow: "var(--shadow-sm)"
+                    }}>
+                      <span style={{ fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", fontWeight: 700 }}>{k}</span>
+                      <span style={{ fontSize: "0.95rem", color: "var(--text)", fontWeight: 500 }}>{v}</span>
+                    </div>
+                  ))}
+              </div>
             </MetaTable>
           </div>
         </div>
@@ -168,57 +139,38 @@ export function ImageDetail({ item, onClose, onSaved }: Props) {
 const overlay: CSSProperties = {
   position: "fixed",
   inset: 0,
-  background: "rgba(0,0,0,0.72)",
+  background: "rgba(15, 23, 42, 0.45)",
+  backdropFilter: "blur(12px)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  padding: "1.5rem",
-  zIndex: 50,
+  padding: "2rem",
+  zIndex: 1000,
 };
 
 const panel: CSSProperties = {
   background: "var(--surface)",
-  borderRadius: 16,
-  border: "1px solid var(--border)",
-  maxWidth: 960,
+  backdropFilter: "blur(24px)",
+  borderRadius: 24,
+  border: "1px solid rgba(255, 255, 255, 0.6)",
+  boxShadow: "var(--shadow-cover)",
+  maxWidth: 1050,
   width: "100%",
-  padding: "1.25rem 1.5rem",
+  padding: "2rem 2.5rem",
   maxHeight: "92vh",
   overflow: "hidden",
 };
 
 const closeBtn: CSSProperties = {
-  background: "transparent",
+  background: "var(--surface2)",
   border: "none",
-  color: "var(--muted)",
-  fontSize: "1.25rem",
-  cursor: "pointer",
-};
-
-const lbl: CSSProperties = {
+  borderRadius: "50%",
+  width: 36,
+  height: 36,
   display: "flex",
-  flexDirection: "column",
-  gap: 6,
-  marginBottom: "0.65rem",
-  fontSize: "0.8rem",
-  color: "var(--muted)",
-};
-
-const inp: CSSProperties = {
-  padding: "0.5rem 0.65rem",
-  borderRadius: 8,
-  border: "1px solid var(--border)",
-  background: "var(--bg)",
+  alignItems: "center",
+  justifyContent: "center",
   color: "var(--text)",
-};
-
-const primaryBtn: CSSProperties = {
-  marginTop: "0.5rem",
-  padding: "0.55rem 1rem",
-  borderRadius: 8,
-  border: "none",
-  background: "linear-gradient(135deg, var(--accent-dim), var(--accent))",
-  color: "#1a1510",
-  fontWeight: 600,
   cursor: "pointer",
+  transition: "all 0.2s",
 };

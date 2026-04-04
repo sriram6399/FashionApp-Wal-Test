@@ -10,7 +10,8 @@ _tmp = Path(tempfile.mkdtemp())
 os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{(_tmp / 'pytest.db').as_posix()}"
 os.environ["UPLOAD_DIR"] = str(_tmp / "uploads")
 os.environ["DATA_DIR"] = str(_tmp / "data")
-os.environ.pop("OPENAI_API_KEY", None)
+os.environ["OPENAI_API_KEY"] = ""
+os.environ["OPENROUTER_API_KEY"] = ""
 
 import pytest
 import pytest_asyncio

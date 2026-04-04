@@ -23,15 +23,42 @@ def _coerce_list(value: Any) -> list[str]:
     return [str(value).strip()] if str(value).strip() else []
 
 
-def normalize_raw_payload(raw: str | dict[str, Any]) -> dict[str, Any]:
-    """Accept JSON string or dict; strip markdown code fences if present."""
-    if isinstance(raw, dict):
-        return raw
-    text = raw.strip()
+def _strip_code_fences(text: str) -> str:
     if text.startswith("```"):
         text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
         text = re.sub(r"\s*```\s*$", "", text)
-    return json.loads(text)
+    return text
+
+
+def _extract_first_json_object(text: str) -> dict[str, Any] | None:
+    """When the model prepends prose, decode the first top-level JSON object."""
+    start = text.find("{")
+    while start >= 0:
+        try:
+            obj, _ = json.JSONDecoder().raw_decode(text[start:])
+            if isinstance(obj, dict):
+                return obj
+        except json.JSONDecodeError:
+            pass
+        start = text.find("{", start + 1)
+    return None
+
+
+def normalize_raw_payload(raw: str | dict[str, Any]) -> dict[str, Any]:
+    """Accept JSON string or dict; strip markdown code fences; tolerate leading/trailing text."""
+    if isinstance(raw, dict):
+        return raw
+    text = _strip_code_fences(raw.strip())
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        extracted = _extract_first_json_object(text)
+        if extracted is not None:
+            return extracted
+        raise
+    if not isinstance(parsed, dict):
+        raise json.JSONDecodeError("Expected JSON object", text, 0)
+    return parsed
 
 
 def parse_model_output(raw: str | dict[str, Any]) -> ClassificationResult:
@@ -81,6 +108,7 @@ def parse_model_output(raw: str | dict[str, Any]) -> ClassificationResult:
 
     structured = StructuredGarmentMetadata(
         garment_type=_scalar(structured_src.get("garment_type")),
+        category=_scalar(structured_src.get("category")),
         style=_scalar(structured_src.get("style")),
         material=_scalar(structured_src.get("material")),
         color_palette=_coerce_list(colors),

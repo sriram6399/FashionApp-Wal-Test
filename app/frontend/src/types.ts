@@ -12,6 +12,7 @@ export type TimeContext = {
 
 export type StructuredMeta = {
   garment_type: string | null;
+  category: string | null;
   style: string | null;
   material: string | null;
   color_palette: string[];
@@ -31,12 +32,25 @@ export type ImageItem = {
   designer_tags: string[];
   designer_notes: string | null;
   designer_name: string | null;
+  user_caption: string | null;
+  upload_metadata: Record<string, unknown> | null;
   file_url: string;
   created_at: string;
 };
 
+export type ImageListSearchMeta = {
+  kind: "semantic" | "semantic_fallback" | "lexical" | "none";
+  message: string;
+};
+
+export type ImageListResponse = {
+  items: ImageItem[];
+  search: ImageListSearchMeta | null;
+};
+
 export type FilterOptions = {
   garment_type: string[];
+  category: string[];
   style: string[];
   material: string[];
   color_palette: string[];

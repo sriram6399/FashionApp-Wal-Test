@@ -1,10 +1,12 @@
 import uvicorn
 
+from fashion_backend.config import settings
+
 if __name__ == "__main__":
     uvicorn.run(
         "fashion_backend.main:app",
-        host="0.0.0.0",
-        port=8000,
+        host=settings.api_host,
+        port=settings.api_port,
         reload=True,
         reload_dirs=["fashion_backend"],
     )

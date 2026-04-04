@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { fileSrc } from "../api";
 import type { ImageItem } from "../types";
 
@@ -10,8 +9,8 @@ type Props = {
 export function ImageGrid({ items, onSelect }: Props) {
   if (!items.length) {
     return (
-      <div style={{ padding: "2rem", color: "var(--muted)", textAlign: "center" }}>
-        No images match. Upload inspiration or relax filters.
+      <div style={{ padding: "4rem 2rem", color: "var(--muted)", textAlign: "center", fontSize: "1.1rem", fontWeight: 300 }}>
+        No items discovered. Let's curate something new.
       </div>
     );
   }
@@ -20,52 +19,48 @@ export function ImageGrid({ items, onSelect }: Props) {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-        gap: "1rem",
-        padding: "1rem",
+        gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+        gap: "1.5rem",
         alignContent: "start",
       }}
     >
-      {items.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          onClick={() => onSelect(item)}
-          style={card}
-        >
-          <img
-            src={fileSrc(item.file_url)}
-            alt=""
-            style={{
-              width: "100%",
-              aspectRatio: "3 / 4",
-              objectFit: "cover",
-              borderRadius: 8,
-              display: "block",
-            }}
-          />
-          <div style={{ padding: "0.5rem 0 0", textAlign: "left" }}>
-            <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>
-              {item.structured.garment_type ?? "Look"}
-            </div>
-            {item.designer_tags?.length ? (
-              <div style={{ fontSize: "0.75rem", color: "var(--designer)", marginTop: 4 }}>
-                {item.designer_tags.join(" · ")}
+      {items.map((item) => {
+        // Filter out 'eval' from tags
+        const validTags = item.designer_tags?.filter(t => t.toLowerCase() !== 'eval') || [];
+        
+        return (
+          <div
+            key={item.id}
+            className="premium-card"
+            onClick={() => onSelect(item)}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="card-image-wrapper">
+              <img
+                src={fileSrc(item.file_url)}
+                alt={item.description || "Apparel Image"}
+                className="card-image"
+              />
+              <div className="card-overlay">
+                <div className="card-title">
+                  {item.structured?.garment_type ?? "Apparel"}
+                </div>
+                {item.description && (
+                  <div className="card-caption">
+                    {item.description}
+                  </div>
+                )}
+                {validTags.length > 0 && (
+                  <div style={{ fontSize: "0.75rem", color: "var(--designer)", marginTop: 6, fontWeight: 500 }}>
+                    {validTags.join(" · ")}
+                  </div>
+                )}
               </div>
-            ) : null}
+            </div>
           </div>
-        </button>
-      ))}
+        );
+      })}
     </div>
   );
 }
-
-const card: CSSProperties = {
-  border: "1px solid var(--border)",
-  borderRadius: 12,
-  padding: "0.5rem",
-  background: "var(--surface)",
-  cursor: "pointer",
-  textAlign: "left",
-  color: "inherit",
-};

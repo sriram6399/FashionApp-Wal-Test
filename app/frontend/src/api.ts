@@ -1,6 +1,5 @@
-import type { FilterOptions, ImageItem } from "./types";
-
-const prefix = "";
+import type { FilterOptions, ImageItem, ImageListResponse } from "./types";
+import { apiUrl, viteApiBaseUrl } from "./env";
 
 async function parseJson<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -10,25 +9,34 @@ async function parseJson<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function fetchImages(params: Record<string, string | undefined>): Promise<ImageItem[]> {
+export async function fetchImages(params: Record<string, string | undefined>): Promise<ImageListResponse> {
   const q = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => {
     if (v === undefined || v === "") return;
     q.append(k, v);
   });
-  const res = await fetch(`${prefix}/api/images?${q.toString()}`);
-  return parseJson<ImageItem[]>(res);
+  const res = await fetch(apiUrl(`/api/images?${q.toString()}`));
+  return parseJson<ImageListResponse>(res);
 }
 
 export async function fetchFilters(): Promise<FilterOptions> {
-  const res = await fetch(`${prefix}/api/filters`);
+  const res = await fetch(apiUrl("/api/filters"));
   return parseJson<FilterOptions>(res);
 }
 
-export async function uploadImage(file: File): Promise<ImageItem> {
+export async function uploadImage(
+  file: File,
+  opts?: { caption?: string; tags?: string; uploadMetadataJson?: string }
+): Promise<ImageItem> {
   const body = new FormData();
   body.append("file", file);
-  const res = await fetch(`${prefix}/api/images`, { method: "POST", body });
+  const c = opts?.caption?.trim();
+  if (c) body.append("caption", c);
+  const tg = opts?.tags?.trim();
+  if (tg) body.append("tags", tg);
+  const mj = opts?.uploadMetadataJson?.trim();
+  if (mj) body.append("upload_metadata", mj);
+  const res = await fetch(apiUrl("/api/images"), { method: "POST", body });
   return parseJson<ImageItem>(res);
 }
 
@@ -36,7 +44,7 @@ export async function patchImage(
   id: number,
   body: { designer_tags: string[]; designer_notes: string; designer_name: string }
 ): Promise<ImageItem> {
-  const res = await fetch(`${prefix}/api/images/${id}`, {
+  const res = await fetch(apiUrl(`/api/images/${id}`), {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -46,5 +54,5 @@ export async function patchImage(
 
 export function fileSrc(url: string): string {
   if (url.startsWith("http")) return url;
-  return `${prefix}${url}`;
+  return viteApiBaseUrl ? `${viteApiBaseUrl}${url}` : url;
 }

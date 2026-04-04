@@ -1,7 +1,14 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+
+
+class ImageListSearchMeta(BaseModel):
+    """Explains how text search results were chosen (GET /api/images when `q` is set)."""
+
+    kind: Literal["semantic", "semantic_fallback", "lexical", "none"]
+    message: str
 
 
 class LocationContext(BaseModel):
@@ -19,7 +26,8 @@ class TimeContext(BaseModel):
 class StructuredGarmentMetadata(BaseModel):
     """AI-extracted attributes stored and used for filtering."""
 
-    garment_type: str | None = None
+    garment_type: str | None = Field(default=None, description="HIGH LEVEL DEPARTMENT ONLY. Strictly use one of: 'Womenswear', 'Menswear', 'Unisex', 'Childrenswear', 'Costumes', 'Accessories'")
+    category: str | None = Field(default=None, description="Detailed item category. Strictly use terms like: 'Dresses', 'Tops', 'Bottoms', 'Outerwear', 'Activewear', 'Swimwear', 'Footwear', 'Bags'")
     style: str | None = None
     material: str | None = None
     color_palette: list[str] = Field(default_factory=list)
@@ -44,6 +52,8 @@ class ImageCreateResponse(BaseModel):
     designer_tags: list[str]
     designer_notes: str | None
     designer_name: str | None
+    user_caption: str | None = None
+    upload_metadata: dict[str, Any] | None = None
     file_url: str
     created_at: datetime
 
@@ -58,6 +68,7 @@ class FilterOptions(BaseModel):
     """Distinct values per facet, derived from stored rows."""
 
     garment_type: list[str]
+    category: list[str]
     style: list[str]
     material: list[str]
     color_palette: list[str]

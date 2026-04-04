@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -11,14 +12,26 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from fashion_backend.classifier import classify_image_bytes
 from fashion_backend.config import settings
+from fashion_backend.embeddings import embed_text
+from fashion_backend.vector_store import query_similar, upsert_image_vector
 from fashion_backend.models import ImageRecord
 from fashion_backend.schemas import (
     ImageCreateResponse,
+    ImageListSearchMeta,
     ImagePatch,
     StructuredGarmentMetadata,
     structured_from_dict,
     structured_to_dict,
 )
+
+@dataclass(frozen=True)
+class ListFilteredResult:
+    rows: list[ImageRecord]
+    search: ImageListSearchMeta | None = None
+
+
+# When every vector hit is above the "close match" distance, still cap how many we return.
+SEMANTIC_FALLBACK_MAX = 10
 
 
 def _read_structured(row: ImageRecord) -> StructuredGarmentMetadata:
@@ -35,15 +48,61 @@ def row_to_response(row: ImageRecord, base_url: str = "") -> ImageCreateResponse
         designer_tags=list(row.designer_tags or []),
         designer_notes=row.designer_notes,
         designer_name=row.designer_name,
+        user_caption=row.user_caption,
+        upload_metadata=row.upload_metadata,
         file_url=url,
         created_at=row.created_at,
     )
+
+
+def build_search_document(row: ImageRecord) -> str:
+    """Text embedded for Chroma — AI description, user caption/metadata, structured fields, designer notes."""
+    s = _read_structured(row)
+    parts: list[str] = [
+        f"A fashion image featuring a {s.garment_type or 'garment'} in a {s.style or 'general'} style.",
+        f"Material: {s.material or 'unknown'}.",
+        f"Pattern: {s.pattern or 'solid'}.",
+        f"Season: {s.season or 'all-season'}.",
+        f"Colors: {', '.join(s.color_palette) if s.color_palette else 'unknown'}.",
+        f"Designed for: {s.consumer_profile or 'anyone'} on a {s.occasion or 'casual'} occasion."
+    ]
+    if row.user_caption:
+        parts.append(f"User caption: {row.user_caption}")
+    if row.description:
+        parts.append(f"AI description: {row.description}")
+    if row.designer_notes:
+        parts.append(f"Designer notes: {row.designer_notes}")
+    if row.designer_tags:
+        parts.append("Designer tags: " + ", ".join(row.designer_tags))
+    if row.designer_name:
+        parts.append(f"Designer name: {row.designer_name}")
+    if s.trend_notes:
+        parts.append(f"Trend notes: {s.trend_notes}")
+        
+    return "\n".join(parts)
+
+
+async def index_row_for_search(row: ImageRecord) -> None:
+    """Embed and upsert into Chroma. No-op without API key; failures are swallowed (lexical search remains)."""
+    if not settings.llm_api_key:
+        return
+    try:
+        doc = build_search_document(row)
+        vec = await embed_text(doc)
+        await upsert_image_vector(row.id, doc, vec)
+    except Exception:
+        pass
 
 
 async def save_upload_and_classify(
     session: AsyncSession,
     image_bytes: bytes,
     content_type: str,
+    caption: str | None = None,
+    upload_metadata: dict[str, Any] | None = None,
+    tags: list[str] | None = None,
+    *,
+    llm_client: Any | None = None,
 ) -> ImageCreateResponse:
     ext = ".jpg"
     if "png" in content_type.lower():
@@ -55,21 +114,33 @@ async def save_upload_and_classify(
     dest.write_bytes(image_bytes)
 
     mime = content_type.split(";")[0].strip() or "image/jpeg"
-    result = await classify_image_bytes(image_bytes, mime=mime)
+    tag_list = list(tags or [])
+    result = await classify_image_bytes(
+        image_bytes,
+        mime=mime,
+        caption=caption,
+        upload_metadata=upload_metadata,
+        tags=tag_list or None,
+        llm_client=llm_client,
+    )
 
     meta = structured_to_dict(result.structured)
+    cap = (caption or "").strip() or None
     rec = ImageRecord(
         file_path=str(dest),
         description=result.description,
         ai_metadata=meta,
-        designer_tags=[],
+        designer_tags=tag_list,
         designer_notes=None,
         designer_name=None,
+        user_caption=cap,
+        upload_metadata=upload_metadata,
         created_at=datetime.now(timezone.utc),
     )
     session.add(rec)
     await session.commit()
     await session.refresh(rec)
+    await index_row_for_search(rec)
     return row_to_response(rec)
 
 
@@ -85,12 +156,15 @@ async def patch_image(session: AsyncSession, image_id: int, patch: ImagePatch) -
         row.designer_name = patch.designer_name
     await session.commit()
     await session.refresh(row)
+    await index_row_for_search(row)
     return row
 
 
 def _text_blob(row: ImageRecord) -> str:
     parts = [
         row.description or "",
+        row.user_caption or "",
+        json.dumps(row.upload_metadata or {}, default=str),
         row.designer_notes or "",
         " ".join(row.designer_tags or []),
     ]
@@ -133,6 +207,8 @@ def row_matches_filters(row: ImageRecord, filters: dict[str, Any]) -> bool:
 
     if filters.get("garment_type") and not _scalar_eq(s.garment_type, filters["garment_type"]):
         return False
+    if filters.get("category") and not _scalar_eq(s.category, filters["category"]):
+        return False
     if filters.get("style") and not _scalar_eq(s.style, filters["style"]):
         return False
     if filters.get("material") and not _scalar_eq(s.material, filters["material"]):
@@ -165,6 +241,11 @@ def row_matches_filters(row: ImageRecord, filters: dict[str, Any]) -> bool:
         return False
     if filters.get("designer_name") and not _scalar_eq(row.designer_name, filters["designer_name"]):
         return False
+    if filters.get("designer_tags"):
+        wanted = filters["designer_tags"]
+        tags = row.designer_tags or []
+        if not any(_scalar_eq(t, wanted) for t in tags):
+            return False
     cp = filters.get("color_palette")
     if cp:
         wanted = cp if isinstance(cp, list) else [cp]
@@ -173,23 +254,101 @@ def row_matches_filters(row: ImageRecord, filters: dict[str, Any]) -> bool:
     return True
 
 
+def _search_meta_top_matches() -> ImageListSearchMeta:
+    return ImageListSearchMeta(
+        kind="semantic",
+        message="Matches for your search, ordered by relevance.",
+    )
+
+
+def _search_meta_fallback() -> ImageListSearchMeta:
+    return ImageListSearchMeta(
+        kind="semantic_fallback",
+        message=(
+            "No very close match for your search; showing up to "
+            f"{SEMANTIC_FALLBACK_MAX} of the closest available results instead."
+        ),
+    )
+
+
+def _search_meta_lexical() -> ImageListSearchMeta:
+    return ImageListSearchMeta(
+        kind="lexical",
+        message="Text matches for your search.",
+    )
+
+
+def _search_meta_none() -> ImageListSearchMeta:
+    return ImageListSearchMeta(
+        kind="none",
+        message="No results found for your search.",
+    )
+
+
 async def list_filtered(
     session: AsyncSession,
     q: str | None,
     filters: dict[str, Any],
-) -> list[ImageRecord]:
+) -> ListFilteredResult:
     stmt: Select[tuple[ImageRecord]] = select(ImageRecord).order_by(ImageRecord.created_at.desc())
     result = await session.execute(stmt)
     rows = list(result.scalars().all())
-    out: list[ImageRecord] = []
+
+    q_clean = (q or "").strip()
+    if not q_clean:
+        return ListFilteredResult(
+            rows=[r for r in rows if row_matches_filters(r, filters)],
+            search=None,
+        )
+
+    if settings.llm_api_key:
+        try:
+            q_vec = await embed_text(q_clean)
+            ranked = await query_similar(q_vec, top_k=120)
+            if ranked:
+                row_map = {r.id: r for r in rows}
+                out: list[ImageRecord] = []
+                best_fallback: list[ImageRecord] = []
+
+                for image_id, _dist in ranked:
+                    r = row_map.get(image_id)
+                    if r is None or not row_matches_filters(r, filters):
+                        continue
+
+                    best_fallback.append(r)
+
+                    # Ignore vectors fundamentally unrelated to the search query
+                    if _dist > 0.65:
+                        continue
+
+                    out.append(r)
+
+                if out:
+                    return ListFilteredResult(
+                        rows=out,
+                        search=_search_meta_top_matches(),
+                    )
+                if best_fallback:
+                    return ListFilteredResult(
+                        rows=best_fallback[:SEMANTIC_FALLBACK_MAX],
+                        search=_search_meta_fallback(),
+                    )
+        except Exception:
+            pass
+
+    out_lex: list[ImageRecord] = []
     for row in rows:
-        blob = _text_blob(row)
-        if not _match_query(blob, q):
-            continue
         if not row_matches_filters(row, filters):
             continue
-        out.append(row)
-    return out
+        blob = _text_blob(row)
+        if _match_query(blob, q_clean):
+            out_lex.append(row)
+    if out_lex:
+        return ListFilteredResult(
+            rows=out_lex,
+            search=_search_meta_lexical(),
+        )
+    return ListFilteredResult(rows=[], search=_search_meta_none())
 
 
 async def collect_filter_facets(session: AsyncSession) -> dict[str, Any]:
@@ -197,6 +356,7 @@ async def collect_filter_facets(session: AsyncSession) -> dict[str, Any]:
     rows = result.scalars().all()
     facets: dict[str, set[Any]] = {
         "garment_type": set(),
+        "category": set(),
         "style": set(),
         "material": set(),
         "color_palette": set(),
@@ -220,6 +380,7 @@ async def collect_filter_facets(session: AsyncSession) -> dict[str, Any]:
         tm = s.time_context
         for key, val in [
             ("garment_type", s.garment_type),
+            ("category", s.category),
             ("style", s.style),
             ("material", s.material),
             ("pattern", s.pattern),
@@ -254,6 +415,7 @@ async def collect_filter_facets(session: AsyncSession) -> dict[str, Any]:
                 facets["designer_tags"].add(t)
     return {
         "garment_type": sorted(facets["garment_type"], key=str),
+        "category": sorted(facets["category"], key=str),
         "style": sorted(facets["style"], key=str),
         "material": sorted(facets["material"], key=str),
         "color_palette": sorted(facets["color_palette"], key=str),

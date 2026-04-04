@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +14,7 @@ from fashion_backend.config import settings
 from fashion_backend.db import get_session, init_db
 from fashion_backend.schemas import FilterOptions, ImagePatch
 from fashion_backend.services import images as image_service
+from fashion_backend.tag_input import parse_tags_field
 
 
 @asynccontextmanager
@@ -35,13 +37,39 @@ app.add_middleware(
 async def upload_image(
     session: Annotated[AsyncSession, Depends(get_session)],
     file: UploadFile = File(...),
+    caption: str | None = Form(default=None),
+    tags: str | None = Form(
+        default=None,
+        description="Comma-separated tags or JSON array string, e.g. market,linen or [\"streetwear\",\"Tokyo\"]",
+    ),
+    upload_metadata: str | None = Form(default=None),
 ):
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(400, "File must be an image")
     data = await file.read()
-    if len(data) > 20 * 1024 * 1024:
-        raise HTTPException(400, "Image too large (max 20MB)")
-    rec = await image_service.save_upload_and_classify(session, data, file.content_type)
+    if len(data) > settings.max_upload_bytes:
+        raise HTTPException(400, f"Image too large (max {settings.max_upload_mb}MB)")
+    try:
+        tag_list = parse_tags_field(tags)
+    except (json.JSONDecodeError, ValueError) as e:
+        raise HTTPException(400, str(e)) from e
+    meta_obj: dict[str, Any] | None = None
+    if upload_metadata and upload_metadata.strip():
+        try:
+            parsed = json.loads(upload_metadata)
+        except json.JSONDecodeError:
+            raise HTTPException(400, "upload_metadata must be valid JSON")
+        if not isinstance(parsed, dict):
+            raise HTTPException(400, "upload_metadata must be a JSON object")
+        meta_obj = parsed
+    rec = await image_service.save_upload_and_classify(
+        session,
+        data,
+        file.content_type,
+        caption=caption,
+        upload_metadata=meta_obj,
+        tags=tag_list,
+    )
     return rec.model_dump(mode="json")
 
 
@@ -50,6 +78,7 @@ async def list_images(
     session: Annotated[AsyncSession, Depends(get_session)],
     q: str | None = Query(default=None),
     garment_type: str | None = Query(default=None),
+    category: str | None = Query(default=None),
     style: str | None = Query(default=None),
     material: str | None = Query(default=None),
     pattern: str | None = Query(default=None),
@@ -64,12 +93,14 @@ async def list_images(
     month: int | None = Query(default=None),
     time_season: str | None = Query(default=None),
     designer_name: str | None = Query(default=None),
+    designer_tags: str | None = Query(default=None),
     color_palette: list[str] | None = Query(default=None),
 ):
     filters: dict[str, Any] = {
         k: v
         for k, v in {
             "garment_type": garment_type,
+            "category": category,
             "style": style,
             "material": material,
             "pattern": pattern,
@@ -84,12 +115,17 @@ async def list_images(
             "month": month,
             "time_season": time_season,
             "designer_name": designer_name,
+            "designer_tags": designer_tags,
             "color_palette": color_palette,
         }.items()
         if v is not None and v != []
     }
-    rows = await image_service.list_filtered(session, q, filters)
-    return [image_service.row_to_response(r).model_dump(mode="json") for r in rows]
+    listed = await image_service.list_filtered(session, q, filters)
+    payload: dict[str, Any] = {
+        "items": [image_service.row_to_response(r).model_dump(mode="json") for r in listed.rows],
+        "search": listed.search.model_dump(mode="json") if listed.search else None,
+    }
+    return payload
 
 
 @app.get("/api/filters")
@@ -121,4 +157,16 @@ async def get_file(filename: str):
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "classifier": "openai" if settings.openai_api_key else "mock"}
+    if not settings.llm_api_key:
+        provider = "mock"
+    elif settings.uses_openrouter:
+        provider = "openrouter"
+    else:
+        provider = "openai"
+    return {
+        "status": "ok",
+        "classifier": provider,
+        "model": settings.vision_model_resolved,
+        "search": "vector" if settings.llm_api_key else "lexical",
+        "embedding_model": settings.embedding_model_resolved if settings.llm_api_key else None,
+    }

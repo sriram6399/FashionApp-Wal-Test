@@ -19,6 +19,19 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
+def _migrate_sqlite_images_columns(sync_conn) -> None:
+    from sqlalchemy import inspect, text
+
+    insp = inspect(sync_conn)
+    if not insp.has_table("images"):
+        return
+    cols = {c["name"] for c in insp.get_columns("images")}
+    if "user_caption" not in cols:
+        sync_conn.execute(text("ALTER TABLE images ADD COLUMN user_caption TEXT"))
+    if "upload_metadata" not in cols:
+        sync_conn.execute(text("ALTER TABLE images ADD COLUMN upload_metadata TEXT"))
+
+
 async def init_db() -> None:
     from fashion_backend import models  # noqa: F401
 
@@ -26,3 +39,4 @@ async def init_db() -> None:
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(_migrate_sqlite_images_columns)

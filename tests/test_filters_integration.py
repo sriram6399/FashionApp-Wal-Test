@@ -8,8 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from fashion_backend.db import SessionLocal
 from fashion_backend.models import ImageRecord
-from fashion_backend.schemas import structured_to_dict
-from fashion_backend.schemas import LocationContext, StructuredGarmentMetadata, TimeContext, structured_to_dict
+from fashion_backend.schemas import (
+    LocationContext,
+    StructuredGarmentMetadata,
+    TimeContext,
+    structured_to_dict,
+)
 from fashion_backend.services.images import list_filtered
 
 
@@ -55,8 +59,8 @@ async def test_filter_by_country_and_year(client: AsyncClient):
     )
     assert r.status_code == 200
     data = r.json()
-    assert len(data) == 1
-    assert data[0]["structured"]["garment_type"] == "dress"
+    assert len(data["items"]) == 1
+    assert data["items"][0]["structured"]["garment_type"] == "dress"
 
 
 @pytest.mark.asyncio
@@ -76,7 +80,7 @@ async def test_filter_month_and_continent(client: AsyncClient):
         params={"continent": "Africa", "month": 8, "designer_name": "Alex"},
     )
     assert r.status_code == 200
-    assert len(r.json()) == 1
+    assert len(r.json()["items"]) == 1
 
 
 @pytest.mark.asyncio
@@ -90,12 +94,12 @@ async def test_list_filtered_unit_style():
         )
         await _seed_row(session, ai_metadata=structured_to_dict(meta))
 
-        rows = await list_filtered(
+        result = await list_filtered(
             session,
             None,
             {"time_season": "fall", "city": "NYC", "designer_name": "Alex"},
         )
-        assert len(rows) == 1
+        assert len(result.rows) == 1
 
 
 async def _seed_row(session: AsyncSession, ai_metadata: dict) -> None:
@@ -108,6 +112,8 @@ async def _seed_row(session: AsyncSession, ai_metadata: dict) -> None:
         designer_tags=[],
         designer_notes=None,
         designer_name="Alex",
+        user_caption=None,
+        upload_metadata=None,
         created_at=datetime.now(timezone.utc),
     )
     session.add(rec)
