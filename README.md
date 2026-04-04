@@ -6,7 +6,7 @@ Full-stack app to upload fashion inspiration images, run vision-based AI tagging
 
 | Section | Links |
 |---------|-------|
-| **Overview** | [Architecture](#architecture) · [Tech stack](#tech-stack) ([Frontend](#frontend) · [Backend](#backend)) · [Supported functionality](#supported-functionality) |
+| **Overview** | [Architecture](#architecture) · [Tech stack](#tech-stack) ([Frontend](#frontend) · [Backend](#backend)) · [Supported functionality](#supported-functionality) · [Design choices and production outlook](#design-choices-and-production-outlook) ([limitations](#known-limitations) · [monitoring](#what-we-would-measure-and-test-in-production) · [first change](#first-change-if-shipping-for-real)) |
 | **Run & develop** | [Run locally with Docker](#run-locally-with-docker) · [Local development without Docker](#local-development-without-docker) |
 | **Repo & rubric** | [Repository layout](#repository-layout) · [Submission deliverables (rubric mapping)](#submission-deliverables-rubric-mapping) |
 | **Quality** | [Model evaluation](#model-evaluation) · [Tests](#tests) |
@@ -62,6 +62,73 @@ The app is a **classic three-tier setup** for local and container use: a **singl
 
 ---
 
+## Design choices and production outlook
+
+### What we optimized for today
+
+- **Vision tagging** — One **OpenAI-compatible** HTTP call per image (multimodal chat + JSON), with **image resizing** before the request to cap payload size and cost. The same path is used for uploads, seed imports, and offline evaluation so behavior stays comparable.
+- **OpenRouter** — The project uses **OpenRouter** as the default provider because **no dedicated cloud credits** were available for first-party managed APIs (e.g. hyperscaler vision endpoints) or GPU hosting in this context. OpenRouter offers a single key and model selection via environment variables, which keeps local and Docker setups simple.
+- **Persistence** — **SQLite** and **local filesystem** storage minimize operational overhead for development and coursework; **Chroma** (local) backs optional **text embeddings** for similarity search when an API key is configured.
+- **Request path** — Uploads run **classification inline** in the `POST /api/images` handler (classify → write DB → then index for search). That trades **latency** on each upload for **straightforward correctness** and easier debugging.
+
+### How this could look on cloud infrastructure
+
+With budget for a cloud account, a typical production-shaped layout would separate concerns:
+
+- **Blob storage** (e.g. S3, GCS, Azure Blob) for originals and derivatives (thumbnails, resized variants) instead of a single container volume.
+- **Managed database** (e.g. **PostgreSQL**) for metadata, migrations, backups, and concurrent writers.
+- **Secrets** in a vault or managed secret store, not only `.env` on disk.
+- **Inference** behind a **dedicated API** or managed service—e.g. **Vertex AI**, **Azure OpenAI**, **Amazon Bedrock**, or a **self-hosted** vision model on **GPU** instances—chosen for SLAs, data residency, and cost controls rather than a generic multi-model router alone.
+
+Exact vendor and topology are **not** prescribed here; they depend on compliance, latency targets, and pricing.
+
+### How we would optimize inference for new data (e.g. uploads)
+
+The current design is **synchronous**: the client waits for vision (and optional embedding) to finish. In a cloud-oriented system, the same product requirements would often push toward:
+
+- **Async ingestion** — Accept the file, store it, enqueue a **job** (queue or workflow engine), return **202 + id** (or keep sync but stream progress). Workers run classification with **retries**, **backoff**, and **per-tenant rate limits**.
+- **Deduping and caching** — **Content-hash** images so identical bytes skip repeat vision calls; cache structured outputs where safe.
+- **Right-sized models** — Use a **smaller or specialized** vision / tagging model when quality is sufficient, reserving large VLMs for hard cases or human-in-the-loop review.
+- **Batching and throttling** — Group non-latency-sensitive jobs to improve throughput and unit economics where the provider allows it.
+- **Scale-out** — Run **stateless API** replicas separately from **GPU or high-latency inference workers** so spikes in uploads do not starve read traffic.
+
+These are standard patterns; the README does not implement them end-to-end so the stack stays easy to run locally.
+
+### Known limitations
+
+Being explicit about gaps helps reviewers and interviewers ask the right follow-ups:
+
+- **SQLite** — Strong fit for a single-node demo; weaker for many concurrent writers, online schema evolution, and HA than a managed **PostgreSQL** (or similar) tier.
+- **No authn / authz** — The API assumes a trusted environment. A public deployment would need **identity**, **scopes**, upload **quotas**, and **abuse** controls.
+- **Synchronous classification on upload** — The client waits for vision (and optional embedding). Slow models or large images mean **long requests** and **timeouts** unless the flow goes async (see above).
+- **Third-party vision** — Quality, latency, and availability depend on **OpenRouter** and upstream model providers; **mock** mode is not a substitute for production semantics.
+- **Local Chroma + embeddings** — The vector layer is **embedded** in the app process, not a managed, replicated search service; failures there are **best-effort** (lexical search still works).
+
+### What we would measure and test in production
+
+Not implemented here, but worth discussing in a systems or ML interview:
+
+- **Latency** — p50 / p95 for `POST /api/images` (and time-to-visible in the grid if ingestion were async).
+- **Reliability** — LLM **error rate**, **retry** behavior, and **degraded** behavior when the provider is down.
+- **Cost** — **USD per classified image** (and per embedding), broken down by model; budgets and alerts.
+- **Quality** — Periodic **offline eval** on a frozen slice (`eval/evaluate.py`-style) when prompts or models change; spot-checks for **schema drift** or nonsense attributes.
+- **Synthetic checks** — **Health** endpoints, **smoke** uploads in staging, and **contract** tests on parsed JSON shape.
+
+### First change if shipping for real
+
+The **first** change would depend on context, but two common orderings are:
+
+1. **If the API were exposed beyond a lab** — Add **authentication**, **rate limits**, and **auditability** before scaling inference.
+2. **If traffic or latency dominated** — Move vision (and embeddings) to an **async worker** and return quickly after durable storage, as sketched in [How we would optimize inference for new data](#how-we-would-optimize-inference-for-new-data-eg-uploads).
+
+Interviewers often want you to **justify the order** (risk vs throughput vs cost)—there is no single correct answer.
+
+### For interviews
+
+The paragraphs above are **intentionally concise**. **Tradeoffs** (cost vs quality, sync vs async UX, vendor lock-in, privacy and data retention, multi-region latency, evaluation drift when swapping models, auth vs async priority, etc.) are **left open** for discussion **during the interview**—this section is a starting point, not a closed design.
+
+---
+
 ## Run locally with Docker
 
 ### Prerequisites
@@ -84,6 +151,8 @@ In `deploy/.env`, set at least one of (optional for a quick demo):
 - **`OPENAI_API_KEY`** — optional alternative when OpenRouter is unset
 
 Without a key, the API still runs; Docker **still seeds** the library from `eval/test_images/` using the **mock** classifier (see seeding below). Add a key for real vision tagging on import and uploads.
+
+**Demonstration:** A working OpenRouter API key **is present** for demonstration purposes (kept only in gitignored `deploy/.env`, never committed). The app is wired end-to-end for live vision tagging with that setup. For a fresh environment without that file, copy `deploy/.env.example` to `deploy/.env` and set `OPENROUTER_API_KEY` (and any other values) yourself.
 
 Other variables are documented inline in `deploy/.env.example` (CORS, models, upload limits, etc.).
 
