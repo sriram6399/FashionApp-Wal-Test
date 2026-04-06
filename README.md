@@ -18,6 +18,16 @@ Full-stack app to upload fashion inspiration images, run vision-based AI tagging
 
 The app is a **classic three-tier setup** for local and container use: a **single-page web UI** talks to a **REST API**, which persists **metadata in SQLite** and **image bytes on disk** (or in a Docker volume). Upload and import paths send image bytes through a **vision LLM** (or a **mock** classifier when no API key is configured); the model returns JSON that is **parsed into structured garment and context fields** used for search, filters, and facets. **Evaluation scripts** under `eval/` call the same classification pipeline as the API so reported metrics match production behavior.
 
+### LLM setup (models we used)
+
+| Role | Model / route | Notes |
+|------|----------------|-------|
+| **Primary vision & tagging** (uploads, seed import, `eval/evaluate.py`) | **Google Gemini** via [OpenRouter](https://openrouter.ai/) | Default when `OPENROUTER_API_KEY` is set and `VISION_MODEL` is unset: `google/gemini-2.0-flash-001` (see `vision_model_resolved` in [`app/backend/fashion_backend/config.py`](app/backend/fashion_backend/config.py)). Override with `VISION_MODEL` for any other OpenRouter multimodal id. |
+| **Judge / labeling assistant** (offline, not in the API) | **OpenAI** (direct `api.openai.com`) | Used in a **separate workflow** to help draft or reconcile `expected` fields in [`eval/ground_truth.json`](eval/ground_truth.json). The running app does **not** call this; it is only for dataset curation. |
+| **Fallback backend path** | OpenAI-only | If only `OPENAI_API_KEY` is set (no OpenRouter key), the same code path calls **OpenAI** directly; default vision model is then `gpt-4o-mini` unless `VISION_MODEL` overrides. |
+
+**Text embeddings** for semantic search (when a key is configured) still go through the same OpenAI-compatible client—on OpenRouter the default embedding id is `openai/text-embedding-3-small`.
+
 ---
 
 ## Tech stack
@@ -39,7 +49,7 @@ The app is a **classic three-tier setup** for local and container use: a **singl
 | Server | [Uvicorn](https://www.uvicorn.org/) |
 | ORM / DB | [SQLAlchemy](https://www.sqlalchemy.org/) 2.x async with **SQLite** via `aiosqlite` |
 | Storage | Local filesystem paths (`UPLOAD_DIR`, `DATA_DIR`); Docker Compose uses a named volume mounted at `/data` |
-| Vision / LLM | OpenAI-compatible client ([OpenRouter](https://openrouter.ai/) or OpenAI) for multimodal chat + JSON; deterministic **mock** when no key is set |
+| Vision / LLM | OpenAI-compatible client: **Gemini on OpenRouter** by default for vision + JSON (`VISION_MODEL` optional); or **OpenAI** direct if only `OPENAI_API_KEY` is set; **mock** when no key |
 | Config | Pydantic settings + `deploy/.env` |
 
 ### Deployment (local)
@@ -66,8 +76,8 @@ The app is a **classic three-tier setup** for local and container use: a **singl
 
 ### What we optimized for today
 
-- **Vision tagging** — One **OpenAI-compatible** HTTP call per image (multimodal chat + JSON), with **image resizing** before the request to cap payload size and cost. The same path is used for uploads, seed imports, and offline evaluation so behavior stays comparable.
-- **OpenRouter** — The project uses **OpenRouter** as the default provider because **no dedicated cloud credits** were available for first-party managed APIs (e.g. hyperscaler vision endpoints) or GPU hosting in this context. OpenRouter offers a single key and model selection via environment variables, which keeps local and Docker setups simple.
+- **Vision tagging** — One **OpenAI-compatible** HTTP call per image (multimodal chat + JSON), with **image resizing** before the request to cap payload size and cost. The same path is used for uploads, seed imports, and offline evaluation so behavior stays comparable. In this project the **primary** vision model is **Gemini** (routed through OpenRouter) for cost/latency and strong multimodal JSON behavior.
+- **OpenRouter + OpenAI** — **OpenRouter** is the default gateway for the app so we can run **Gemini** for production classification without managing separate Google SDK wiring in the container. **OpenAI** is used **additionally** (direct API, own key) only as an **offline judge** when building or cleaning evaluation labels—not inside the FastAPI request path.
 - **Persistence** — **SQLite** and **local filesystem** storage minimize operational overhead for development and coursework; **Chroma** (local) backs optional **text embeddings** for similarity search when an API key is configured.
 - **Request path** — Uploads run **classification inline** in the `POST /api/images` handler (classify → write DB → then index for search). That trades **latency** on each upload for **straightforward correctness** and easier debugging.
 
@@ -101,7 +111,7 @@ Being explicit about gaps helps reviewers and interviewers ask the right follow-
 - **SQLite** — Strong fit for a single-node demo; weaker for many concurrent writers, online schema evolution, and HA than a managed **PostgreSQL** (or similar) tier.
 - **No authn / authz** — The API assumes a trusted environment. A public deployment would need **identity**, **scopes**, upload **quotas**, and **abuse** controls.
 - **Synchronous classification on upload** — The client waits for vision (and optional embedding). Slow models or large images mean **long requests** and **timeouts** unless the flow goes async (see above).
-- **Third-party vision** — Quality, latency, and availability depend on **OpenRouter** and upstream model providers; **mock** mode is not a substitute for production semantics.
+- **Third-party vision** — Quality, latency, and availability depend on **OpenRouter**, **Google** (Gemini), and other upstream providers; **mock** mode is not a substitute for production semantics.
 - **Local Chroma + embeddings** — The vector layer is **embedded** in the app process, not a managed, replicated search service; failures there are **best-effort** (lexical search still works).
 
 ### What we would measure and test in production
@@ -145,16 +155,14 @@ From the repository root, copy the example file and then edit `deploy/.env` with
 cp deploy/.env.example deploy/.env
 ```
 
-In `deploy/.env`, set at least one of (optional for a quick demo):
+In `deploy/.env`, configure keys depending on what you need:
 
-- **`OPENROUTER_API_KEY`** — recommended ([OpenRouter keys](https://openrouter.ai/keys))
-- **`OPENAI_API_KEY`** — optional alternative when OpenRouter is unset
+- **`OPENROUTER_API_KEY`** — **Recommended for the app.** Enables **Gemini** (default `google/gemini-2.0-flash-001`) for uploads, import, and `eval/evaluate.py` unless you override `VISION_MODEL` ([OpenRouter keys](https://openrouter.ai/keys)).
+- **`OPENAI_API_KEY`** — Use **either** as a **fallback** for the backend when OpenRouter is unset (direct OpenAI vision path), **or** alongside OpenRouter in your **local shell only** when you run an offline judge script against `ground_truth.json`. **Do not** commit this key.
 
-Without a key, the API still runs; Docker **still seeds** the library from `eval/test_images/` using the **mock** classifier (see seeding below). Add a key for real vision tagging on import and uploads.
+Without any LLM key, the API still runs; Docker **still seeds** the library from `eval/test_images/` using the **mock** classifier (see seeding below). Add `OPENROUTER_API_KEY` for real **Gemini** tagging on import and uploads.
 
-**Demonstration:** A working OpenRouter API key **is present** for demonstration purposes (kept only in gitignored `deploy/.env`, never committed). The app is wired end-to-end for live vision tagging with that setup. For a fresh environment without that file, copy `deploy/.env.example` to `deploy/.env` and set `OPENROUTER_API_KEY` (and any other values) yourself.
-
-Other variables are documented inline in `deploy/.env.example` (CORS, models, upload limits, etc.).
+Other variables are documented inline in `deploy/.env.example` (CORS, `VISION_MODEL`, embeddings, upload limits, etc.).
 
 ### 2. Build and start
 
@@ -241,7 +249,7 @@ This section matches the assignment’s **model evaluation** expectations. The *
 | **50–100** garment or street-fashion images from an **open** source | **50** labeled images: metadata and `expected` attributes in [`eval/ground_truth.json`](eval/ground_truth.json) (each row includes a `source_url`, mostly **Wikimedia Commons**). You may substitute or extend with other open sets (e.g. [Pexels fashion](https://www.pexels.com/search/fashion/) where licenses allow). Image files live under `eval/test_images/` (gitignored—generate with the script below). |
 | **Manually defined expected attributes** | Each row’s `expected` object: `garment_type`, `style`, `material`, `occasion`, and **location** (`continent`, `country`, `city`; `null` skips scoring for that field). |
 | **Run classifier on the test set; per-attribute accuracy** | [`eval/evaluate.py`](eval/evaluate.py) calls the **same** `classify_image_bytes` path as the API, then writes counts to `evaluation_report.md`. |
-| **Brief narrative: strengths, weaknesses, how to improve** | **`eval/evaluation_report.md`** → **Analysis** (auto-summarized from the table; you can edit for a deeper write-up). |
+| **Brief narrative: strengths, weaknesses, how to improve** | **`eval/evaluation_report.md`** → methodology, interpretation, and next steps (body text is regenerated by `evaluate.py` with your latest accuracies; extend the template in `eval/evaluate.py` if you want more). |
 
 ### Prepare images and re-run evaluation
 
@@ -261,11 +269,11 @@ That script fetches on the order of **50** images and merges `ground_truth.json`
 python eval/evaluate.py
 ```
 
-This overwrites **`eval/evaluation_report.md`** with **Per-Attribute Accuracy** plus an **Analysis** section derived from those numbers (not a fixed “all good” template). Add your own prose there if you want more detail for reviewers.
+This overwrites **`eval/evaluation_report.md`** with **Per-Attribute Accuracy** plus a fixed **methodology and interpretation** section where percentages and strongest/weakest fields are filled in from the run (see `build_analysis_section` in `eval/evaluate.py`).
 
 ### MOE-style ground truth and production-classifier outlook
 
-**Ground truth without fully manual labeling:** Filling every `expected` field by hand across 50+ images is tedious. To **save time**, this project used a **second LLM as a judge**—reviewing the image and/or the primary model’s structured output—to help produce or refine labels in `eval/ground_truth.json`. That behaves a bit like a **mixture-of-experts (MoE)–style** setup: one model proposes attributes, another reconciles or scores them. The reported metrics are still computed against that fixed `expected` block in [`eval/evaluate.py`](eval/evaluate.py); the intent is **faster iteration** and **more consistent** pseudo-labels than solo hand-labeling, not a claim of perfect human ground truth.
+**Ground truth without fully manual labeling:** Filling every `expected` field by hand across 50+ images is tedious. To **save time**, we used **OpenAI** (direct API) as a **judge LLM** in an **offline** workflow—reviewing each image and/or the **Gemini** model’s structured output—to help produce or refine labels in `eval/ground_truth.json`. That is **not** wired into the FastAPI app; it is a curation step only. It behaves a bit like a **mixture-of-experts (MoE)–style** setup: **Gemini** proposes attributes for the product and for eval runs; **OpenAI** reconciles or scores labels for the frozen test set. The reported metrics in [`eval/evaluate.py`](eval/evaluate.py) are always against that fixed `expected` block using the **same** backend classifier as production (Gemini via OpenRouter when configured). The intent is **faster iteration** and **more consistent** pseudo-labels than solo hand-labeling, not a claim of perfect human ground truth.
 
 **More production-grade serving:** At extreme scale (e.g. **very high QPS** globally), a single **large multimodal LLM** call per upload is usually too heavy. A practical direction is **normal classifiers per field** (or per field group)—**garment_type**, **style**, **material**, **occasion**, **continent**, **country**, **city**, plus optional heads for **category**, **pattern**, **season**, **color_palette**—each served as a **small LM stack** (encoder + head), not a full chat **LLM**.
 

@@ -1,5 +1,5 @@
 """
-Multimodal classification: OpenRouter (OpenAI-compatible) or direct OpenAI when a key is set;
+Multimodal classification: OpenRouter (default vision: Gemini) or direct OpenAI when a key is set;
 otherwise deterministic mock for local dev.
 """
 

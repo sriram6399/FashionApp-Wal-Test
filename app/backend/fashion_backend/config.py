@@ -135,7 +135,7 @@ class Settings(BaseSettings):
         if self.vision_model:
             return self.vision_model
         if self.uses_openrouter:
-            return "openai/gpt-4o"
+            return "google/gemini-2.0-flash-001"
         return "gpt-4o-mini"
 
     embedding_model: str | None = Field(
