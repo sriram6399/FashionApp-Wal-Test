@@ -56,6 +56,41 @@ async def classify_path(path: Path, *, llm_client=None):
     return await classify_image_bytes(data, mime=mime, llm_client=llm_client)
 
 
+def build_analysis_section(stats: dict[str, dict[str, int]]) -> str:
+    """Short narrative derived from scored attributes (not hardcoded praise)."""
+    rows: list[tuple[float, str, int, int]] = []
+    for attr, v in stats.items():
+        t = int(v["total"])
+        if t == 0:
+            continue
+        c = int(v["correct"])
+        rows.append((c / t, attr, c, t))
+    rows.sort(key=lambda x: -x[0])
+    lines = [
+        "## Analysis",
+        "",
+        "_The bullets below are generated from the table above; add your own interpretation for reviewers._",
+        "",
+    ]
+    if not rows:
+        lines.append("No scored attributes — ensure non-null `expected` values exist in `ground_truth.json`.")
+        return "\n".join(lines)
+    top = rows[: min(3, len(rows))]
+    bottom = rows[-min(3, len(rows)) :]
+    fmt = lambda r: f"`{r[1]}` {r[0]:.0%} ({r[2]}/{r[3]})"
+    lines.append("**Relatively stronger on this run:** " + "; ".join(fmt(r) for r in top) + ".")
+    lines.append("")
+    lines.append("**Weaker on this run:** " + "; ".join(fmt(r) for r in bottom) + ".")
+    lines.append("")
+    lines.append(
+        "**Improvements with more time:** align **garment_type** labels with the prompt taxonomy (or add few-shot "
+        "JSON examples); constrain or synonym-map subjective fields (**style**, **occasion**); add more non-null "
+        "**material** labels to score coverage; standardize **location** strings (continent / country / city); "
+        "consider a smaller specialized classifier for garment type if cost/latency allow."
+    )
+    return "\n".join(lines)
+
+
 async def main_async() -> None:
     gt_path = EVAL_DIR / "ground_truth.json"
     img_dir = EVAL_DIR / "test_images"
@@ -118,6 +153,8 @@ async def main_async() -> None:
     for attr in sorted(stats.keys()):
         t = stats[attr]["total"]
         c = stats[attr]["correct"]
+        if t == 0:
+            continue
         acc = (c / t) if t else 0.0
         line = f"- **{attr}**: {acc:.1%} ({c}/{t})"
         print(line)
@@ -127,12 +164,10 @@ async def main_async() -> None:
         "\nNotes: Mock classifier ignores image semantics. Fill `expected` in ground_truth.json "
         "for automated scores; similar garment labels (e.g. shirt vs t-shirt) may need fuzzy matching."
     )
-    report.append("\n## Analysis\n")
-    report.append("The model performs exceptionally well on objective metadata like `garment_type` and `material`. ")
-    report.append("It occasionally struggles with highly subjective descriptions in `style`, necessitating fuzzy matching. ")
-    report.append("Future improvements could include fine-tuning the base prompt with multi-shot examples of exact desired style taxonomy.")
-    
-    with open(EVAL_DIR / "evaluation_report.md", "w") as f:
+    report.append("\n")
+    report.append(build_analysis_section(stats))
+
+    with open(EVAL_DIR / "evaluation_report.md", "w", encoding="utf-8") as f:
         f.write("\n".join(report))
 
 

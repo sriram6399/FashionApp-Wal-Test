@@ -1,6 +1,6 @@
 # Fashion Inspiration Library
 
-Full-stack app to upload fashion inspiration images, run vision-based AI tagging, search and filter the library, and add designer annotations. This README focuses on **running everything locally with Docker** first, then documents **tests**, **model evaluation**, and how those map to a typical submission rubric.
+Full-stack app to upload fashion inspiration images, run vision-based AI tagging, search and filter the library, and add designer annotations. This README focuses on **running everything locally with Docker** first, then documents **tests**, **model evaluation** (including the rubric-aligned checklist and the written **evaluation summary** in [`eval/evaluation_report.md`](eval/evaluation_report.md)), and how those map to a typical submission rubric.
 
 ## Table of contents
 
@@ -9,7 +9,7 @@ Full-stack app to upload fashion inspiration images, run vision-based AI tagging
 | **Overview** | [Architecture](#architecture) · [Tech stack](#tech-stack) ([Frontend](#frontend) · [Backend](#backend)) · [Supported functionality](#supported-functionality) · [Design choices and production outlook](#design-choices-and-production-outlook) ([limitations](#known-limitations) · [monitoring](#what-we-would-measure-and-test-in-production) · [first change](#first-change-if-shipping-for-real)) |
 | **Run & develop** | [Run locally with Docker](#run-locally-with-docker) · [Local development without Docker](#local-development-without-docker) |
 | **Repo & rubric** | [Repository layout](#repository-layout) · [Submission deliverables (rubric mapping)](#submission-deliverables-rubric-mapping) |
-| **Quality** | [Model evaluation](#model-evaluation) · [Tests](#tests) |
+| **Quality** | [Model evaluation](#model-evaluation) ([MOE / production classifiers](#moe-style-ground-truth-and-production-classifier-outlook)) · [Tests](#tests) |
 | **Reference** | [API overview](#api-overview) · [License and data](#license-and-data) |
 
 ---
@@ -234,14 +234,25 @@ For review, prefer **logical git commits** (e.g. backend, frontend, eval set, te
 
 ## Model evaluation
 
-**Test set:** The repo is set up for **at least 50** labeled rows in `eval/ground_truth.json`, with files under `eval/test_images/` (e.g. Wikimedia Commons–sourced fashion photos; you can also use other open datasets or sources such as [Pexels fashion search](https://www.pexels.com/search/fashion/) if licenses allow). If `test_images` is empty, run from the **repository root**:
+This section matches the assignment’s **model evaluation** expectations. The **authoritative numeric run** and **analysis** for graders are in [`eval/evaluation_report.md`](eval/evaluation_report.md) (regenerate after changing the model or labels by running `python eval/evaluate.py` with `OPENROUTER_API_KEY` or `OPENAI_API_KEY` set).
+
+| Assignment expectation | Where it is in this repo |
+|------------------------|---------------------------|
+| **50–100** garment or street-fashion images from an **open** source | **50** labeled images: metadata and `expected` attributes in [`eval/ground_truth.json`](eval/ground_truth.json) (each row includes a `source_url`, mostly **Wikimedia Commons**). You may substitute or extend with other open sets (e.g. [Pexels fashion](https://www.pexels.com/search/fashion/) where licenses allow). Image files live under `eval/test_images/` (gitignored—generate with the script below). |
+| **Manually defined expected attributes** | Each row’s `expected` object: `garment_type`, `style`, `material`, `occasion`, and **location** (`continent`, `country`, `city`; `null` skips scoring for that field). |
+| **Run classifier on the test set; per-attribute accuracy** | [`eval/evaluate.py`](eval/evaluate.py) calls the **same** `classify_image_bytes` path as the API, then writes counts to `evaluation_report.md`. |
+| **Brief narrative: strengths, weaknesses, how to improve** | **`eval/evaluation_report.md`** → **Analysis** (auto-summarized from the table; you can edit for a deeper write-up). |
+
+### Prepare images and re-run evaluation
+
+If `eval/test_images/` is missing locally, from the **repository root**:
 
 ```bash
 pip install -r app/backend/requirements.txt
 python eval/prepare_color_test_set.py
 ```
 
-That script downloads on the order of **50** images and writes/merges `ground_truth.json` (expected fields may be null until you fill them manually for strict accuracy). Optional: `eval/prepare_hf_fashion_sample.py` + `eval/requirements-hf.txt` for additional sampling.
+That script fetches on the order of **50** images and merges `ground_truth.json` (you may still refine `expected` labels). Optional: `eval/prepare_hf_fashion_sample.py` + `eval/requirements-hf.txt`.
 
 **Run the evaluator** (uses `OPENROUTER_API_KEY` or `OPENAI_API_KEY` from the environment, or **mock** if unset — mock scores are not semantically meaningful):
 
@@ -250,7 +261,29 @@ That script downloads on the order of **50** images and writes/merges `ground_tr
 python eval/evaluate.py
 ```
 
-This classifies each image with the same pipeline as the API, compares to `expected` in `ground_truth.json`, prints **per-attribute accuracy** for `garment_type`, `style`, `material`, `occasion`, and location fields, and overwrites `eval/evaluation_report.md` with the numeric summary plus a short template **Analysis** section. For a real submission, edit that analysis (or this README) with honest notes on **where the model does well**, **where it struggles**, and **what you would improve** (prompting, taxonomy, fine-tuning, more labeled data, etc.).
+This overwrites **`eval/evaluation_report.md`** with **Per-Attribute Accuracy** plus an **Analysis** section derived from those numbers (not a fixed “all good” template). Add your own prose there if you want more detail for reviewers.
+
+### MOE-style ground truth and production-classifier outlook
+
+**Ground truth without fully manual labeling:** Filling every `expected` field by hand across 50+ images is tedious. To **save time**, this project used a **second LLM as a judge**—reviewing the image and/or the primary model’s structured output—to help produce or refine labels in `eval/ground_truth.json`. That behaves a bit like a **mixture-of-experts (MoE)–style** setup: one model proposes attributes, another reconciles or scores them. The reported metrics are still computed against that fixed `expected` block in [`eval/evaluate.py`](eval/evaluate.py); the intent is **faster iteration** and **more consistent** pseudo-labels than solo hand-labeling, not a claim of perfect human ground truth.
+
+**More production-grade serving:** At extreme scale (e.g. **very high QPS** globally), a single **large multimodal LLM** call per upload is usually too heavy. A practical direction is **normal classifiers per field** (or per field group)—**garment_type**, **style**, **material**, **occasion**, **continent**, **country**, **city**, plus optional heads for **category**, **pattern**, **season**, **color_palette**—each served as a **small LM stack** (encoder + head), not a full chat **LLM**.
+
+**LMs vs LLMs:** Those heads are typically **smaller language or vision encoders** with **linear / shallow classifiers** (e.g. ViT/ConvNeXt + softmax, **CLIP / SigLIP embeddings + probe**, distilled students). They offer **faster inference**, **better batching**, and **more deterministic** outputs than frontier **LLM** APIs. The **tradeoff** is that **accuracy can fall short** of a large VLM on hard cases (ambiguous style, weak geographic cues, long-tail items)—a deliberate **latency–cost–quality** exchange.
+
+**Model families (high level)** — each can be **fine-tuned** with image–label pairs, **LoRA / adapters** on the backbone, **multi-task heads** sharing a trunk, **distillation** from a teacher VLM or judge LLM, **hard-negative mining**, and **taxonomy-constrained** output layers:
+
+| Attribute area | Typical direction (not implemented in this repo) |
+|----------------|---------------------------------------------------|
+| **Garment type / category** | Image trunk (ViT, EfficientNet, ConvNeXt) + softmax or metric learning; fashion-specific pre-training where available. |
+| **Style / material / occasion** | Shared encoder + **per-field heads** (multi-label sigmoid) or CLIP-style **image–text prototype** matching. |
+| **Continent / country / city** | **Hierarchical** classifiers, geo priors, or fusion with **captions / metadata** (pure image signal is often weak). |
+| **Pattern / season / color** | Additional heads on the same backbone or separate lightweight specialists. |
+| **Caption present** | Small **encoder-only LMs** on text for fields that are easier to read from language. |
+
+**Fine-tuning (sketch):** Curate **labeled data** per taxonomy, align label sets with **filters in the product**, train with supervised objectives, optionally **match a teacher** LLM/VLM distribution, then **regress per-attribute metrics** the same way as `eval/evaluate.py`. Serving adds **batching, quantization, caching**, and **async** queues as needed.
+
+**Interviews:** Routing (true MoE vs cascades), **when to keep an LLM judge** in the loop, **evaluation drift**, multi-region deployment, and **exact accuracy–latency numbers** are **left for detailed discussion** there rather than in this README.
 
 ---
 
